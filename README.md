@@ -1,6 +1,6 @@
 # DataDrop
 
-# 📡 File Transfer Protocol — `FileChunk`
+### 📡 File Transfer Protocol — `FileChunk`
 > This protocol enables reliable **UDP-based file transfer** using **Protocol Buffers (proto3)** for serialization.
 
 📐 **Structure**
