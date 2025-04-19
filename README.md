@@ -32,7 +32,7 @@ Byte:  22+ (variable)
      +--------------------------+
 ```
 
-📦 Protocol Overview
+📦 **Protocol Overview**
 1) **Sender**:
     * Reads file, splits it into 1024-byte chunks.
     * Wraps each chunk in a FileChunk message.
