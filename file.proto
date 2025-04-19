@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package fileproto;
+option go_package = "./fileproto;fileproto";
+
+message FileChunk {
+    uint32 version = 1;
+    string filename = 2;
+    uint32 chunkIndex = 3;
+    uint32 totalChunks = 4;
+    bytes data = 5;
+    bool isLastChunk = 6;
+    string checksum = 7;
+}
+
+message FileAck {
+    uint32 ChunkIndex = 1;
+}
