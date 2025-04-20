@@ -42,7 +42,7 @@ func Receive(address string) error {
 
 		if outputFile == nil {
 			fileName = msg.Filename
-			filePath := filepath.Join(homeDir, fileName)
+			filePath := filepath.Join(homeDir, filepath.Base(fileName))
 			outputFile, err = os.Create(filePath); if err != nil {
 				return fmt.Errorf("failed to create file: %v", err)
 			}
