@@ -1,7 +1,37 @@
-# DataDrop
+<h1 align="center" style="display: flex; align-items: center; justify-content: center;">
+    Echo
+</h1>
+
+<div align="center">
+  <a href="https://coveralls.io/github/IdanKoblik/Echo?branch=main">
+    <img src="https://coveralls.io/repos/github/IdanKoblik/Echo/badge.svg?branch=main" alt="Coverage Status">
+  </a>
+
+  <img src="https://img.shields.io/github/actions/workflow/status/IdanKoblik/Echo/main.yml" alt="GitHub Actions Workflow Status">
+
+  <a href="https://sonarcloud.io/summary/new_code?id=IdanKoblik_Echo">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=IdanKoblik_Echo&metric=alert_status" alt="Quality Gate Status">
+  </a>
+
+  <a href="https://github.com/IdanKoblik/echo/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/IdanKoblik/echo.svg" alt="License">
+  </a>
+</div>
+<br>
+
+> ⚠️ **Development Status**: This project is currently in development stage.
+
+<br>
+Echo is a lightweight, peer-to-peer (P2P) file transfer system designed for reliability, speed, and simplicity. Whether you're sending files across your local network or over the internet, Echo ensures smooth and secure transfers without relying on central servers.
+
+### 🌟 Key Benefits
+* P2P Architecture – Transfers go directly between devices, no middleman required.
+* User-Friendly – Designed with simplicity in mind, making it easy to send and receive files.
+* Reliable Over UDP – Ensures reliable delivery using acknowledgments and chunk-based transfer.
 
 ### 📡 File Transfer Protocol — `FileChunk`
 > This protocol enables reliable **UDP-based file transfer** using **Protocol Buffers (proto3)** for serialization.
+<br>
 
 📐 **Structure**
 

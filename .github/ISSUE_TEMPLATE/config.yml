@@ -1,0 +1,7 @@
+blank_issues_enabled: true
+default: bug.md
+
+contact_links:
+  - name: "For bug reports, please check if your issue already exists before submitting."
+    url: "https://github.com/IdanKoblik/Echo/issues"
+    about: "GitHub issues"
