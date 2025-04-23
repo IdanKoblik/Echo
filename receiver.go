@@ -1,7 +1,7 @@
 package main
 
 import (
-	"datadrop/fileproto"
+	"echo/fileproto"
 	"fmt"
 	"google.golang.org/protobuf/proto"
 	"log"

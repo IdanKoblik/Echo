@@ -1,7 +1,7 @@
 package main
 
 import (
-	"datadrop/fileproto"
+	"echo/fileproto"
 	"io"
 	"log"
 	"net"
