@@ -1,0 +1,41 @@
+name: Publish
+
+on:
+  workflow_call:
+    inputs:
+      VERSION:
+        description: 'Version name'
+        required: true
+        type: string
+    secrets:
+      GH_AUTH:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build binaries for Linux, macOS, and Windows
+        run: |
+          mkdir -p dist
+
+          GOOS=linux GOARCH=amd64 go build -o dist/echo-linux-amd64 ./...
+          GOOS=darwin GOARCH=amd64 go build -o dist/echo-darwin-amd64 ./...
+          GOOS=windows GOARCH=amd64 go build -o dist/echo-windows-amd64.exe ./...
+
+      - name: List output files
+        run: ls -lh dist
+
+      - name: Upload
+        uses: IdanKoblik/Changelog@prod
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_AUTH }}
+        with:
+          version: ${{ inputs.VERSION }}
+          assets: '["./dist/*"]'

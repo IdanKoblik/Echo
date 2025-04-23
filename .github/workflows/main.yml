@@ -1,0 +1,59 @@
+name: Main pipeline workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+      - 3-cicd
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Version name'
+        required: true
+        type: string
+
+permissions:
+  pull-requests: write
+  contents: write
+  repository-projects: write
+  packages: write
+  pages: write
+  id-token: write
+  
+jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Output version
+        run: echo "The version is ${{ steps.get_version.outputs.VERSION }}"
+
+  run_tests:
+    needs: checkout
+    uses: ./.github/workflows/callable.test.yml
+
+  run_secuirty:
+    needs: run_tests
+    uses: ./.github/workflows/callable.security.yml
+
+  lint:
+    needs: run_secuirty
+    uses: ./.github/workflows/callable.lint.yml
+
+  publish:
+    needs: lint
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/callable.publish.yml
+    with:
+      VERSION: ${{ github.event.inputs.name || 'dev' }}
+    secrets:
+      GH_AUTH: ${{ secrets.GH_AUTH }}
