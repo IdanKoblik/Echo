@@ -1,0 +1,38 @@
+name: Main pipeline workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+      - 3-cicd
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Version name'
+        required: true
+        type: string
+
+permissions:
+  pull-requests: write
+  contents: write
+  repository-projects: write
+  packages: write
+  pages: write
+  id-token: write
+  
+jobs:
+  checkout:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get_version.outputs.VERSION }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Output version
+        run: echo "The version is ${{ steps.get_version.outputs.VERSION }}"
