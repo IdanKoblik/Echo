@@ -54,7 +54,6 @@ func Send(filename, address string) error {
 				return err
 			}
 
-			file.Seek(0, 0)
 			msg.Checksum = checksum 
 		}
 
@@ -83,7 +82,9 @@ func handleAck(connection net.Conn, expectedIndex uint32) (bool, error) {
 	const timeout = 5 * time.Second // 5 seconds
 
 	ackBuffer := make([]byte, 128)
-	connection.SetReadDeadline(time.Now().Add(timeout))
+	err := connection.SetReadDeadline(time.Now().Add(timeout)); if err != nil {
+		return false, err
+	}
 
 	num, err := connection.Read(ackBuffer); if err != nil {
 		return false, err

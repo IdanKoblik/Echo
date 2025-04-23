@@ -3,7 +3,7 @@ name: Test
 on:
   workflow_call:
     inputs:
-      go-version:
+      GO:
         required: true
         type: string
 
@@ -12,14 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: ${{ inputs.GO }}
+
       - name: Install dependencies
         run: go mod tidy
+
       - name: Run tests
-        run: go test ./... -v -coverprofile=coverage.out
-      - name: Upload coverage
+        run: ./test.sh
+
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.out
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: coverage.out
