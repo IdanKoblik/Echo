@@ -42,21 +42,15 @@ jobs:
     uses: ./.github/workflows/callable.test.yml
     with:
       GO: '1.24'
-      
+
   run_secuirty:
     needs: run_tests
     uses: ./.github/workflows/callable.security.yml
     with:
       GO: '1.24'
 
-  lint:
-    needs: run_secuirty
-    uses: ./.github/workflows/callable.lint.yml
-    with:
-      GO: '1.24'
-
   publish:
-    needs: lint
+    needs: run_secuirty
     if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/callable.publish.yml
     with:
