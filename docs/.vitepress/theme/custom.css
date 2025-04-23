@@ -1,0 +1,304 @@
+:root {
+  --vp-c-brand: #41321F;
+  --vp-c-brand-light: #5a4932;
+  --vp-c-brand-lighter: #7a6952;
+  --vp-c-brand-dark: #2D231C;
+  --vp-c-brand-darker: #1a140f;
+  
+  --vp-c-bg: #F5ECD9;
+  --vp-c-bg-soft: #EFE2C9;
+  --vp-c-bg-mute: #E8D5B5;
+  
+  --vp-c-text: #2D231C;
+  --vp-c-text-light: #41321F;
+  --vp-c-text-lighter: #604832;
+  --vp-c-text-dark: #1a140f;
+  --vp-c-text-darker: #0e0a08;
+  
+  --vp-font-family-base: 'Source Sans 3', sans-serif;
+  --vp-font-family-heading: 'Playfair Display', serif;
+  
+  --vp-c-divider: rgba(65, 50, 31, 0.2);
+  --vp-c-divider-light: rgba(65, 50, 31, 0.1);
+  
+  --vp-c-gutter: #E8D5B5;
+  --vp-c-gutter-dark: #D9C18F;
+  
+  /* Code block styling */
+  --vp-code-bg-color: #E8D5B5;
+  --vp-code-block-bg: #E8D5B5;
+  --vp-code-line-highlight-color: rgba(65, 50, 31, 0.1);
+  
+  /* Button styling */
+  --vp-button-brand-bg: #41321F;
+  --vp-button-brand-hover-bg: #5a4932;
+  --vp-button-brand-active-bg: #2D231C;
+  
+  --vp-button-alt-bg: rgba(65, 50, 31, 0.1);
+  --vp-button-alt-hover-bg: rgba(65, 50, 31, 0.15);
+  --vp-button-alt-active-bg: rgba(65, 50, 31, 0.2);
+
+  /* Custom properties */
+  --echo-texture-opacity: 0.07;
+}
+
+.dark {
+  --vp-c-brand: #E8D5B5;
+  --vp-c-brand-light: #F5ECD9;
+  --vp-c-brand-lighter: #FFF8EA;
+  --vp-c-brand-dark: #D9C18F;
+  --vp-c-brand-darker: #C9AD6E;
+  
+  --vp-c-bg: #1F1A14;
+  --vp-c-bg-soft: #2A231B;
+  --vp-c-bg-mute: #352D23;
+  
+  --vp-c-text: #E8D5B5;
+  --vp-c-text-light: #F5ECD9;
+  --vp-c-text-lighter: #FFF8EA;
+  --vp-c-text-dark: #D9C18F;
+  --vp-c-text-darker: #C9AD6E;
+  
+  --vp-c-divider: rgba(232, 213, 181, 0.2);
+  --vp-c-divider-light: rgba(232, 213, 181, 0.1);
+  
+  --vp-c-gutter: #352D23;
+  --vp-c-gutter-dark: #403729;
+  
+  /* Code block styling */
+  --vp-code-bg-color: #2A231B;
+  --vp-code-block-bg: #2A231B;
+  
+  /* Button styling */
+  --vp-button-brand-bg: #E8D5B5;
+  --vp-button-brand-hover-bg: #F5ECD9;
+  --vp-button-brand-active-bg: #D9C18F;
+  --vp-button-brand-border: transparent;
+  --vp-button-brand-text: #1F1A14;
+  --vp-button-brand-hover-text: #1F1A14;
+  --vp-button-brand-active-text: #1F1A14;
+  
+  --vp-button-alt-bg: rgba(232, 213, 181, 0.1);
+  --vp-button-alt-hover-bg: rgba(232, 213, 181, 0.15);
+  --vp-button-alt-active-bg: rgba(232, 213, 181, 0.2);
+
+  /* Custom properties */
+  --echo-texture-opacity: 0.05;
+}
+
+/* Paper texture background */
+body {
+  background-image: url('/paper-texture.png');
+  background-blend-mode: multiply;
+  background-size: 500px;
+  background-repeat: repeat;
+  background-attachment: fixed;
+}
+
+body:before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/paper-texture.png');
+  background-size: 500px;
+  background-repeat: repeat;
+  opacity: var(--echo-texture-opacity);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Typography customizations */
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc h4,
+.vp-doc h5,
+.vp-doc h6 {
+  font-family: var(--vp-font-family-heading);
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.vp-doc h1 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.vp-doc h2 {
+  margin-top: 3rem;
+  border-top: 1px solid var(--vp-c-divider);
+  padding-top: 2rem;
+  font-size: 1.8rem;
+}
+
+/* Main content area styling */
+.VPDoc .content {
+  padding: 32px;
+  background-color: var(--vp-c-bg);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.VPDoc .content:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/paper-texture.png');
+  background-size: 500px;
+  background-repeat: repeat;
+  opacity: var(--echo-texture-opacity);
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+/* Custom styling for the homepage hero section */
+.VPHero .name,
+.VPHero .text {
+  font-family: var(--vp-font-family-heading);
+}
+
+.VPHero .name {
+  font-size: 4rem;
+  letter-spacing: -0.02em;
+}
+
+.VPHero .text {
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+/* Button styling */
+.VPButton.brand {
+  transition: transform 0.2s ease;
+}
+
+.VPButton.brand:hover {
+  transform: translateY(-2px);
+}
+
+/* Link animations */
+.vp-doc a {
+  position: relative;
+  text-decoration: none;
+  color: var(--vp-c-brand);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.vp-doc a:after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  bottom: 0;
+  left: 0;
+  background-color: var(--vp-c-brand);
+  transform-origin: bottom right;
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.vp-doc a:hover:after {
+  transform-origin: bottom left;
+  transform: scaleX(1);
+}
+
+/* Logo and navigation styling */
+.VPNavBar {
+  backdrop-filter: blur(8px);
+}
+
+.VPNavBar.has-sidebar .content {
+  background-color: transparent;
+}
+
+/* Custom styling for code blocks */
+.vp-doc div[class*='language-'] {
+  background-color: var(--vp-code-block-bg);
+  border-radius: 8px;
+  margin: 16px 0;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), inset 0 -1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+.vp-doc div[class*='language-']:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/paper-texture.png');
+  background-size: 500px;
+  background-repeat: repeat;
+  opacity: var(--echo-texture-opacity);
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+/* Custom Echo cat logo styling on home page */
+.echo-cat-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2rem 0;
+  transition: transform 0.3s ease;
+}
+
+.echo-cat-container:hover {
+  transform: scale(1.02);
+}
+
+.echo-cat-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Page transitions */
+.fade-slide-y-enter-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-y-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.fade-slide-y-enter-from,
+.fade-slide-y-leave-to {
+  transform: translateY(10px);
+  opacity: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .VPHero .name {
+    font-size: 2.5rem;
+  }
+  
+  .VPHero .text {
+    font-size: 1.2rem;
+  }
+  
+  .VPDoc .content {
+    padding: 24px 16px;
+  }
+  
+  .vp-doc h1 {
+    font-size: 2rem;
+  }
+  
+  .vp-doc h2 {
+    font-size: 1.5rem;
+  }
+}
