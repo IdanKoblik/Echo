@@ -15,8 +15,7 @@ func Receive(conn *net.UDPConn) error {
 	var outputFile *os.File
 	var fileName string
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	homeDir, err := os.UserHomeDir(); if err != nil {
 		return err
 	}
 
