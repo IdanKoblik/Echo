@@ -4,23 +4,34 @@ import (
 	"echo/fileproto"
 	"echo/utils"
 	"io"
-	"log"
 	"net"
 	"os"
 	"time"
-
+	"github.com/schollz/progressbar/v3"
 	"google.golang.org/protobuf/proto"
+	"fmt"
+	"github.com/fatih/color"
 )
 
 const VERSION = 1
 
 func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
+	startTime := time.Now()
+	success := color.New(color.FgGreen).SprintFunc()
+	info := color.New(color.FgCyan).SprintFunc()
+
+	fmt.Printf("%s Opening file: %s\n", info("ℹ"), filename)
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
 	}
-
 	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return err
+	}
+	totalSize := fileInfo.Size()
 
 	raddr, err := net.ResolveUDPAddr("udp", remoteAddr)
 	if err != nil {
@@ -36,13 +47,30 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
 		if err == io.EOF {
 			break
 		}
-
 		chunk := make([]byte, num)
 		copy(chunk, buffer[:num])
 		chunks = append(chunks, chunk)
 	}
 
 	total := uint32(len(chunks))
+	fmt.Printf("%s Total chunks: %d (%.2f MB)\n", info("ℹ"), total, float64(totalSize)/(1024*1024))
+
+	bar := progressbar.NewOptions(len(chunks),
+		progressbar.OptionSetDescription("Sending file"),
+		progressbar.OptionEnableColorCodes(true),
+		progressbar.OptionShowBytes(true),
+		progressbar.OptionSetWidth(30),
+		progressbar.OptionSetTheme(progressbar.Theme{
+			Saucer:        "[green]━[reset]",
+			SaucerHead:    "[green]>[reset]",
+			SaucerPadding: "━",
+			BarStart:      "[",
+			BarEnd:        "]",
+		}),
+		progressbar.OptionOnCompletion(func() { fmt.Println() }),
+	)
+
+	retries := 0
 	for i, chunk := range chunks {
 		msg := &fileproto.FileChunk{
 			Version:     uint32(VERSION),
@@ -58,7 +86,6 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
 			if err != nil {
 				return err
 			}
-
 			msg.Checksum = checksum
 		}
 
@@ -74,15 +101,25 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
 
 		ok, err := handleAck(conn, uint32(i))
 		if err != nil || !ok {
-			log.Printf("ACK failed for chunk %d: %v. Retrying...", i, err)
-			i--
-			continue
+			if retries < 3 {
+				retries++
+				i--
+				continue
+			}
+			return fmt.Errorf("failed to receive ACK after 3 retries for chunk %d: %v", i, err)
 		}
+		retries = 0
 
-		log.Printf("Received ACK for chunk %d/%d", i+1, total)
+		bar.Add(1)
 	}
 
-	log.Println("File transfer complete!")
+	duration := time.Since(startTime)
+	speed := float64(totalSize) / duration.Seconds() / (1024 * 1024) // MB/s
+
+	fmt.Printf("\n%s Transfer complete!\n", success("✓"))
+	fmt.Printf("%s Time taken: %s\n", info("ℹ"), duration.Round(time.Second))
+	fmt.Printf("%s Average speed: %.2f MB/s\n", info("ℹ"), speed)
+
 	return nil
 }
 

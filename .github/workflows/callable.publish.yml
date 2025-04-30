@@ -25,9 +25,9 @@ jobs:
         run: |
           mkdir -p dist
 
-          GOOS=linux GOARCH=amd64 go build -o dist/echo-linux-amd64 .
-          GOOS=darwin GOARCH=amd64 go build -o dist/echo-darwin-amd64 .
-          GOOS=windows GOARCH=amd64 go build -o dist/echo-windows-amd64.exe .
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-linux-amd64 .
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-darwin-amd64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-windows-amd64.exe . 
           
       - name: List output files
         run: ls -lh dist

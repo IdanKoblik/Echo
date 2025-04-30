@@ -6,6 +6,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"log"
 	"net"
+	"github.com/fatih/color"
 )
 
 func main() {
@@ -30,7 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-}
+} 
 
 func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 	var selectedMode string
@@ -45,21 +46,27 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 		"Receive a file": "receive",
 	}[selectedMode]
 
+	blue := color.New(color.FgBlue).SprintFunc()
+	bold := color.New(color.Bold).SprintFunc()
+
+	fmt.Printf("\n%s Please choose your settings.\n", bold("CONFIGURATION"))
+
 	survey.AskOne(&survey.Input{
-		Message: "Enter your local port to listen on (e.g. 9000):",
+		Message: fmt.Sprintf("%s Enter your local port to listen on (e.g. 9000):", blue(">>")),
 		Default: "9000",
 	}, &cfg.LocalPort, opts...)
 
 	survey.AskOne(&survey.Input{
-		Message: "Enter peer's address (e.g. 127.0.0.1:9001):",
+		Message: fmt.Sprintf("%s Enter peer's address (e.g. 127.0.0.1:9001):", blue(">>")),
 	}, &cfg.RemoteAddr, opts...)
 
 	if cfg.Mode == "send" {
 		survey.AskOne(&survey.Input{
-			Message: "Enter path to the file you want to send:",
+			Message: fmt.Sprintf("%s Enter path to the file you want to send:", blue(">>")),
 		}, &cfg.FilePath, opts...)
 	}
 }
+
 
 func RunPeer(localAddr, remoteAddr, sendFile string) error {
 	laddr, err := net.ResolveUDPAddr("udp", localAddr)
