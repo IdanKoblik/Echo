@@ -47,6 +47,63 @@ func runValidationTest(t *testing.T, name string, cfg Config, wantErr string) {
 	})
 }
 
+func TestParseFlags(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []string
+		want    Config
+		wantErr bool
+	}{
+		{
+			name: "Valid send flags",
+			args: []string{"cmd", "--mode", "send", "--port", "8080", "--remote", "localhost:9090", "--file", "test.txt"},
+			want: Config{
+				Mode:       "send",
+				LocalPort:  "8080",
+				RemoteAddr: "localhost:9090",
+				FilePath:   "test.txt",
+			},
+			wantErr: false,
+		},
+		{
+			name: "Valid receive flags",
+			args: []string{"cmd", "--mode", "receive", "--port", "8081", "--remote", "127.0.0.1:9000"},
+			want: Config{
+				Mode:       "receive",
+				LocalPort:  "8081",
+				RemoteAddr: "127.0.0.1:9000",
+				FilePath:   "",
+			},
+			wantErr: false,
+		},
+		{
+			name:    "Invalid flag format",
+			args:    []string{"cmd", "--unknown"},
+			want:    Config{},
+			wantErr: true,
+		},
+	}
+
+	originalArgs := os.Args
+	defer func() { os.Args = originalArgs }()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			os.Args = tt.args
+
+			cfg, err := ParseFlags()
+
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ParseFlags() error = %v, wantErr = %v", err, tt.wantErr)
+			}
+
+			if err == nil && *cfg != tt.want {
+				t.Errorf("ParseFlags() = %+v, want %+v", *cfg, tt.want)
+			}
+		})
+	}
+}
+
 func TestValidateFlags(t *testing.T) {
 	tempFile, tempDir := createTempResources(t)
 
