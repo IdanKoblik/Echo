@@ -13,13 +13,8 @@ import (
 
 const (
 	LOCAL_PORT  = "9000"
-	REMOTE_ADDR = "127.0.0.1:9001"
+	REMOTE_ADDR = "0.0.0.0:9001"
 )
-
-type testProcess struct {
-	args []string
-	done chan struct{}
-}
 
 func runWithArgs(args []string) {
 	oldArgs := os.Args

@@ -8,18 +8,18 @@ import (
 
 func TestValidateFlags(t *testing.T) {
 	// Create a temporary test file
-	tempFile, err := os.CreateTemp("", "test*.txt")
-	if err != nil {
+	tempFile, err := os.CreateTemp("", "test*.txt"); if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
+	
 	defer os.Remove(tempFile.Name())
 	tempFile.Close()
 
 	// Create a temporary directory
-	tempDir, err := os.MkdirTemp("", "test")
-	if err != nil {
+	tempDir, err := os.MkdirTemp("", "test"); if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
+
 	defer os.RemoveAll(tempDir)
 
 	tests := []struct {
@@ -114,7 +114,14 @@ func TestValidateFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateFlags(tt.mode, tt.port, tt.remote, tt.file)
+			cfg := Config{
+				Mode: tt.mode,
+				LocalPort: tt.port,
+				RemoteAddr: tt.remote,
+				FilePath: tt.file,
+			}
+
+			err := ValidateFlags(&cfg)
 
 			if tt.wantErr == "" {
 				if err != nil {

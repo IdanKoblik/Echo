@@ -22,22 +22,19 @@ func Receive(conn *net.UDPConn) error {
 
 	buffer := make([]byte, 2048)
 	for {
-		num, client, err := conn.ReadFromUDP(buffer)
-		if err != nil {
+		num, client, err := conn.ReadFromUDP(buffer); if err != nil {
 			return err
 		}
 
 		var msg fileproto.FileChunk
-		err = proto.Unmarshal(buffer[:num], &msg)
-		if err != nil {
+		err = proto.Unmarshal(buffer[:num], &msg); if err != nil {
 			return err
 		}
 
 		if outputFile == nil {
 			fileName = msg.Filename
 			filePath := filepath.Join(homeDir, filepath.Base(fileName))
-			outputFile, err = os.Create(filePath)
-			if err != nil {
+			outputFile, err = os.Create(filePath); if err != nil {
 				return fmt.Errorf("failed to create file: %v", err)
 			}
 
@@ -45,8 +42,7 @@ func Receive(conn *net.UDPConn) error {
 			fmt.Printf("Creating file: %s\n", fileName)
 		}
 
-		_, err = outputFile.Write(msg.Data)
-		if err != nil {
+		_, err = outputFile.Write(msg.Data); if err != nil {
 			return fmt.Errorf("failed to write chunk to file: %v", err)
 		}
 
@@ -55,19 +51,16 @@ func Receive(conn *net.UDPConn) error {
 			ChunkIndex: msg.ChunkIndex,
 		}
 
-		encodedAck, err := proto.Marshal(ack)
-		if err != nil {
+		encodedAck, err := proto.Marshal(ack); if err != nil {
 			return err
 		}
 
-		_, err = conn.WriteToUDP(encodedAck, client)
-		if err != nil {
+		_, err = conn.WriteToUDP(encodedAck, client); if err != nil {
 			return err
 		}
 
 		if msg.IsLastChunk {
-			checksum, err := utils.GetFileChecksum(outputFile)
-			if err != nil {
+			checksum, err := utils.GetFileChecksum(outputFile); if err != nil {
 				return err
 			}
 
