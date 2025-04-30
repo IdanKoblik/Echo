@@ -1,10 +1,10 @@
-package main
+package utils
 
 import (
-	"os"
 	"crypto/sha256"
-	"io"
 	"encoding/hex"
+	"io"
+	"os"
 )
 
 func GetFileChecksum(file *os.File) (string, error) {

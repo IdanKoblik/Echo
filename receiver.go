@@ -2,6 +2,7 @@ package main
 
 import (
 	"echo/fileproto"
+	"echo/utils"
 	"fmt"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -10,27 +11,19 @@ import (
 	"path/filepath"
 )
 
-func Receive(address string) error {
-	addr, err := net.ResolveUDPAddr("udp", address); if err != nil {
-		return err
-	}
-
-	connection, err := net.ListenUDP("udp", addr); if err != nil {
-		return err
-	}
-
-	defer connection.Close()
-
+func Receive(conn *net.UDPConn) error {
 	var outputFile *os.File
 	var fileName string
 
-	homeDir, err := os.UserHomeDir(); if err != nil {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
 		return err
 	}
 
 	buffer := make([]byte, 2048)
 	for {
-		num, client, err := connection.ReadFromUDP(buffer); if err != nil {
+		num, client, err := conn.ReadFromUDP(buffer)
+		if err != nil {
 			return err
 		}
 
@@ -43,7 +36,8 @@ func Receive(address string) error {
 		if outputFile == nil {
 			fileName = msg.Filename
 			filePath := filepath.Join(homeDir, filepath.Base(fileName))
-			outputFile, err = os.Create(filePath); if err != nil {
+			outputFile, err = os.Create(filePath)
+			if err != nil {
 				return fmt.Errorf("failed to create file: %v", err)
 			}
 
@@ -51,7 +45,8 @@ func Receive(address string) error {
 			fmt.Printf("Creating file: %s\n", fileName)
 		}
 
-		_, err = outputFile.Write(msg.Data); if err != nil {
+		_, err = outputFile.Write(msg.Data)
+		if err != nil {
 			return fmt.Errorf("failed to write chunk to file: %v", err)
 		}
 
@@ -60,16 +55,19 @@ func Receive(address string) error {
 			ChunkIndex: msg.ChunkIndex,
 		}
 
-		encodedAck, err := proto.Marshal(ack); if err != nil {
+		encodedAck, err := proto.Marshal(ack)
+		if err != nil {
 			return err
 		}
 
-		_, err = connection.WriteToUDP(encodedAck, client); if err != nil {
+		_, err = conn.WriteToUDP(encodedAck, client)
+		if err != nil {
 			return err
 		}
 
 		if msg.IsLastChunk {
-			checksum, err := GetFileChecksum(outputFile); if err != nil {
+			checksum, err := utils.GetFileChecksum(outputFile)
+			if err != nil {
 				return err
 			}
 

@@ -2,34 +2,37 @@ package main
 
 import (
 	"echo/fileproto"
+	"echo/utils"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"log"
 	"net"
 	"os"
 	"time"
-	"google.golang.org/protobuf/proto"
 )
 
 const VERSION = 1
 
-func Send(filename, address string) error {
-	file, err := os.Open(filename); if err != nil {
+func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
+	file, err := os.Open(filename)
+	if err != nil {
 		return err
 	}
 
 	defer file.Close()
-	connection, err := net.Dial("udp", address); if err != nil {
+
+	raddr, err := net.ResolveUDPAddr("udp", remoteAddr)
+	if err != nil {
 		return err
 	}
-
-	defer connection.Close()
 
 	const chunkSize = 1024
 	buffer := make([]byte, chunkSize)
 	var chunks [][]byte
 
 	for {
-		num, err := file.Read(buffer); if err == io.EOF {
+		num, err := file.Read(buffer)
+		if err == io.EOF {
 			break
 		}
 
@@ -40,32 +43,36 @@ func Send(filename, address string) error {
 
 	total := uint32(len(chunks))
 	for i, chunk := range chunks {
-		msg := &fileproto.FileChunk {
-			Version: uint32(VERSION),
-			Filename: filename,
-			ChunkIndex: uint32(i),
+		msg := &fileproto.FileChunk{
+			Version:     uint32(VERSION),
+			Filename:    filename,
+			ChunkIndex:  uint32(i),
 			TotalChunks: total,
-			Data: chunk,	
+			Data:        chunk,
 			IsLastChunk: (i == len(chunks)-1),
 		}
 
 		if msg.IsLastChunk {
-			checksum, err := GetFileChecksum(file); if err != nil {
+			checksum, err := utils.GetFileChecksum(file)
+			if err != nil {
 				return err
 			}
 
-			msg.Checksum = checksum 
+			msg.Checksum = checksum
 		}
 
-		encoded, err := proto.Marshal(msg); if err != nil {
+		encoded, err := proto.Marshal(msg)
+		if err != nil {
 			return err
 		}
 
-		_, err = connection.Write(encoded); if err != nil {
+		_, err = conn.WriteToUDP(encoded, raddr)
+		if err != nil {
 			return err
 		}
 
-		ok, err := handleAck(connection, uint32(i)); if err != nil || !ok {
+		ok, err := handleAck(conn, uint32(i))
+		if err != nil || !ok {
 			log.Printf("ACK failed for chunk %d: %v. Retrying...", i, err)
 			i--
 			continue
@@ -75,23 +82,26 @@ func Send(filename, address string) error {
 	}
 
 	log.Println("File transfer complete!")
-	return nil;
+	return nil
 }
 
 func handleAck(connection net.Conn, expectedIndex uint32) (bool, error) {
 	const timeout = 5 * time.Second // 5 seconds
 
 	ackBuffer := make([]byte, 128)
-	err := connection.SetReadDeadline(time.Now().Add(timeout)); if err != nil {
+	err := connection.SetReadDeadline(time.Now().Add(timeout))
+	if err != nil {
 		return false, err
 	}
 
-	num, err := connection.Read(ackBuffer); if err != nil {
+	num, err := connection.Read(ackBuffer)
+	if err != nil {
 		return false, err
 	}
 
 	var ackMsg fileproto.FileAck
-	err = proto.Unmarshal(ackBuffer[:num], &ackMsg); if err != nil {
+	err = proto.Unmarshal(ackBuffer[:num], &ackMsg)
+	if err != nil {
 		return false, err
 	}
 
