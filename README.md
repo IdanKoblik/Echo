@@ -62,7 +62,7 @@ Byte:  22+ (variable)
      +--------------------------+
 ```
 
-**Workflow**
+📐 **Workflow**
 ```
 User A (Sender)                          User B (Receiver)
 -----------------                       -------------------
