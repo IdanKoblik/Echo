@@ -9,14 +9,16 @@ import (
 func createTempResources(t *testing.T) (string, string) {
 	t.Helper()
 
-	tempFile, err := os.CreateTemp("", "test*.txt"); if err != nil {
+	tempFile, err := os.CreateTemp("", "test*.txt")
+	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 
 	tempFilePath := tempFile.Name()
 	tempFile.Close()
 
-	tempDir, err := os.MkdirTemp("", "test"); if err != nil {
+	tempDir, err := os.MkdirTemp("", "test")
+	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 

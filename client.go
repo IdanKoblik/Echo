@@ -9,7 +9,8 @@ import (
 )
 
 func main() {
-	cfg, err := utils.ParseFlags(); if err != nil {
+	cfg, err := utils.ParseFlags()
+	if err != nil {
 		fmt.Printf("Error parsing flags: %v\n", err)
 		return
 	}
@@ -17,14 +18,16 @@ func main() {
 	if cfg.Mode == "" {
 		handleSurveyMode(cfg)
 	} else {
-		err = utils.ValidateFlags(cfg); if err != nil {
+		err = utils.ValidateFlags(cfg)
+		if err != nil {
 			fmt.Printf("Invalid input: %v\n", err)
 			return
 		}
 	}
 
 	localAddr := fmt.Sprintf(":%s", cfg.LocalPort)
-	err = RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath); if err != nil {
+	err = RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath)
+	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
 }
@@ -59,11 +62,13 @@ func handleSurveyMode(cfg *utils.Config) {
 }
 
 func RunPeer(localAddr, remoteAddr, sendFile string) error {
-	laddr, err := net.ResolveUDPAddr("udp", localAddr); if err != nil {
+	laddr, err := net.ResolveUDPAddr("udp", localAddr)
+	if err != nil {
 		return err
 	}
 
-	conn, err := net.ListenUDP("udp", laddr); if err != nil {
+	conn, err := net.ListenUDP("udp", laddr)
+	if err != nil {
 		return err
 	}
 

@@ -2,10 +2,10 @@ package utils
 
 import (
 	"errors"
+	"flag"
 	"os"
 	"strconv"
 	"strings"
-	"flag"
 )
 
 type Config struct {
@@ -50,6 +50,6 @@ func ValidateFlags(cfg *Config) error {
 			return errors.New("invalid --file, must point to a file")
 		}
 	}
-	
+
 	return nil
 }

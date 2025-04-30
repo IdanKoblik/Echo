@@ -113,12 +113,14 @@ func testFixture(fixture string, t *testing.T) {
 			return
 		}
 
-		homeDir, err := os.UserHomeDir(); if err != nil {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
 			t.Errorf("failed to get home dir: %v", err)
 			return
 		}
 
-		receivedFile := filepath.Join(homeDir, filepath.Base(fixture)); if !compareFiles(fixture, receivedFile) {
+		receivedFile := filepath.Join(homeDir, filepath.Base(fixture))
+		if !compareFiles(fixture, receivedFile) {
 			t.Errorf("File mismatch for %s", fixture)
 			t.Errorf("test: %s, %s", receivedFile, fixture)
 		}
@@ -126,11 +128,13 @@ func testFixture(fixture string, t *testing.T) {
 }
 
 func compareFiles(file1, file2 string) bool {
-	hash1, err := fileChecksum(file1); if err != nil {
+	hash1, err := fileChecksum(file1)
+	if err != nil {
 		return false
 	}
 
-	hash2, err := fileChecksum(file2); if err != nil {
+	hash2, err := fileChecksum(file2)
+	if err != nil {
 		return false
 	}
 
@@ -138,7 +142,8 @@ func compareFiles(file1, file2 string) bool {
 }
 
 func fileChecksum(filename string) (string, error) {
-	file, err := os.Open(filename); if err != nil {
+	file, err := os.Open(filename)
+	if err != nil {
 		return "", err
 	}
 

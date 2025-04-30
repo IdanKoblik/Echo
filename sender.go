@@ -3,24 +3,27 @@ package main
 import (
 	"echo/fileproto"
 	"echo/utils"
-	"google.golang.org/protobuf/proto"
 	"io"
 	"log"
 	"net"
 	"os"
 	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
 const VERSION = 1
 
 func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
-	file, err := os.Open(filename); if err != nil {
+	file, err := os.Open(filename)
+	if err != nil {
 		return err
 	}
 
 	defer file.Close()
 
-	raddr, err := net.ResolveUDPAddr("udp", remoteAddr); if err != nil {
+	raddr, err := net.ResolveUDPAddr("udp", remoteAddr)
+	if err != nil {
 		return err
 	}
 
@@ -29,7 +32,8 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
 	var chunks [][]byte
 
 	for {
-		num, err := file.Read(buffer); if err == io.EOF {
+		num, err := file.Read(buffer)
+		if err == io.EOF {
 			break
 		}
 
@@ -50,18 +54,21 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
 		}
 
 		if msg.IsLastChunk {
-			checksum, err := utils.GetFileChecksum(file); if err != nil {
+			checksum, err := utils.GetFileChecksum(file)
+			if err != nil {
 				return err
 			}
 
 			msg.Checksum = checksum
 		}
 
-		encoded, err := proto.Marshal(msg); if err != nil {
+		encoded, err := proto.Marshal(msg)
+		if err != nil {
 			return err
 		}
 
-		_, err = conn.WriteToUDP(encoded, raddr); if err != nil {
+		_, err = conn.WriteToUDP(encoded, raddr)
+		if err != nil {
 			return err
 		}
 
@@ -83,16 +90,19 @@ func handleAck(connection net.Conn, expectedIndex uint32) (bool, error) {
 	const timeout = 5 * time.Second // 5 seconds
 
 	ackBuffer := make([]byte, 128)
-	err := connection.SetReadDeadline(time.Now().Add(timeout)); if err != nil {
+	err := connection.SetReadDeadline(time.Now().Add(timeout))
+	if err != nil {
 		return false, err
 	}
 
-	num, err := connection.Read(ackBuffer); if err != nil {
+	num, err := connection.Read(ackBuffer)
+	if err != nil {
 		return false, err
 	}
 
 	var ackMsg fileproto.FileAck
-	err = proto.Unmarshal(ackBuffer[:num], &ackMsg); if err != nil {
+	err = proto.Unmarshal(ackBuffer[:num], &ackMsg)
+	if err != nil {
 		return false, err
 	}
 
