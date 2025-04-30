@@ -11,6 +11,6 @@ go fmt ./...
 go vet $PACKAGES
 
 echo "Building..."
-go build -v
+go build -ldflags "-s -w" -v
 
 echo "Build completed successfully!"
