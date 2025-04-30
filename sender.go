@@ -2,27 +2,27 @@ package main
 
 import (
 	"echo/fileproto"
+	"echo/utils"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"log"
 	"net"
 	"os"
 	"time"
-	"google.golang.org/protobuf/proto"
 )
 
 const VERSION = 1
 
-func Send(filename, address string) error {
+func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
 	file, err := os.Open(filename); if err != nil {
 		return err
 	}
 
 	defer file.Close()
-	connection, err := net.Dial("udp", address); if err != nil {
+
+	raddr, err := net.ResolveUDPAddr("udp", remoteAddr); if err != nil {
 		return err
 	}
-
-	defer connection.Close()
 
 	const chunkSize = 1024
 	buffer := make([]byte, chunkSize)
@@ -40,32 +40,33 @@ func Send(filename, address string) error {
 
 	total := uint32(len(chunks))
 	for i, chunk := range chunks {
-		msg := &fileproto.FileChunk {
-			Version: uint32(VERSION),
-			Filename: filename,
-			ChunkIndex: uint32(i),
+		msg := &fileproto.FileChunk{
+			Version:     uint32(VERSION),
+			Filename:    filename,
+			ChunkIndex:  uint32(i),
 			TotalChunks: total,
-			Data: chunk,	
+			Data:        chunk,
 			IsLastChunk: (i == len(chunks)-1),
 		}
 
 		if msg.IsLastChunk {
-			checksum, err := GetFileChecksum(file); if err != nil {
+			checksum, err := utils.GetFileChecksum(file); if err != nil {
 				return err
 			}
 
-			msg.Checksum = checksum 
+			msg.Checksum = checksum
 		}
 
 		encoded, err := proto.Marshal(msg); if err != nil {
 			return err
 		}
 
-		_, err = connection.Write(encoded); if err != nil {
+		_, err = conn.WriteToUDP(encoded, raddr); if err != nil {
 			return err
 		}
 
-		ok, err := handleAck(connection, uint32(i)); if err != nil || !ok {
+		ok, err := handleAck(conn, uint32(i))
+		if err != nil || !ok {
 			log.Printf("ACK failed for chunk %d: %v. Retrying...", i, err)
 			i--
 			continue
@@ -75,7 +76,7 @@ func Send(filename, address string) error {
 	}
 
 	log.Println("File transfer complete!")
-	return nil;
+	return nil
 }
 
 func handleAck(connection net.Conn, expectedIndex uint32) (bool, error) {

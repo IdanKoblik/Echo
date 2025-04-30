@@ -2,6 +2,7 @@ package main
 
 import (
 	"echo/fileproto"
+	"echo/utils"
 	"fmt"
 	"google.golang.org/protobuf/proto"
 	"log"
@@ -10,17 +11,7 @@ import (
 	"path/filepath"
 )
 
-func Receive(address string) error {
-	addr, err := net.ResolveUDPAddr("udp", address); if err != nil {
-		return err
-	}
-
-	connection, err := net.ListenUDP("udp", addr); if err != nil {
-		return err
-	}
-
-	defer connection.Close()
-
+func Receive(conn *net.UDPConn) error {
 	var outputFile *os.File
 	var fileName string
 
@@ -30,13 +21,12 @@ func Receive(address string) error {
 
 	buffer := make([]byte, 2048)
 	for {
-		num, client, err := connection.ReadFromUDP(buffer); if err != nil {
+		num, client, err := conn.ReadFromUDP(buffer); if err != nil {
 			return err
 		}
 
 		var msg fileproto.FileChunk
-		err = proto.Unmarshal(buffer[:num], &msg)
-		if err != nil {
+		err = proto.Unmarshal(buffer[:num], &msg); if err != nil {
 			return err
 		}
 
@@ -64,12 +54,12 @@ func Receive(address string) error {
 			return err
 		}
 
-		_, err = connection.WriteToUDP(encodedAck, client); if err != nil {
+		_, err = conn.WriteToUDP(encodedAck, client); if err != nil {
 			return err
 		}
 
 		if msg.IsLastChunk {
-			checksum, err := GetFileChecksum(outputFile); if err != nil {
+			checksum, err := utils.GetFileChecksum(outputFile); if err != nil {
 				return err
 			}
 
