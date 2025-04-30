@@ -24,10 +24,26 @@ This direct connection offers several advantages:
 - Reduced dependency on external infrastructure
 - Works in offline environments
 
-## Echo's Network Architecture
+## Echo's Network workflow
 
-### TODO
-
-## Network Topology
-
-### TODO
+```
+User A (Sender)                          User B (Receiver)
+-----------------                       -------------------
+Select "Send a file"                    Select "Receive a file"
+Input local port, remote addr           Input local port, remote addr
+|
+Open file and split into chunks
+|
+for each chunk: ----------------------> ReadFromUDP (waits for chunk)
+                                        |
+Marshal FileChunk (with data)           |
+WriteToUDP(remoteAddr) ---------------->
+                                        |
+                                        | Unmarshal chunk
+                                        | Write chunk to disk
+                                        | Marshal ACK
+                                        | WriteToUDP(senderAddr) <----------
+<------------------------------------- Wait for ACK (handleAck)
+If last chunk:
+- Validate checksum
+```

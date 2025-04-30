@@ -14,12 +14,6 @@ Echo was built on three fundamental principles:
 2. **Security** - End-to-end encryption ensures that only the intended recipient can access the files
 3. **Simplicity** - Designed to be intuitive for everyone, from tech novices to advanced users
 
-## How Echo Works
-
-At its core, Echo uses a distributed network architecture with the following components:
-
-# TODO
-
 ## Use Cases
 
 Echo is ideal for a wide range of file transfer scenarios:
@@ -37,7 +31,3 @@ Echo is ideal for a wide range of file transfer scenarios:
 | No Size Limits | ✅ | ❌ | ❌ | ✅ |
 | No Accounts | ✅ | ❌ | ❌ | ⚠️ |
 | No Central Servers | ✅ | ❌ | ❌ | ❌ |
-
-## Technical Overview
-
-# TODO
