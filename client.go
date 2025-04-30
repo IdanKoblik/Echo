@@ -32,13 +32,13 @@ func main() {
 	}
 }
 
-func handleSurveyMode(cfg *utils.Config) {
+func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 	var selectedMode string
 	prompt := &survey.Select{
 		Message: "Choose mode:",
 		Options: []string{"Send a file", "Receive a file"},
 	}
-	survey.AskOne(prompt, &selectedMode)
+	survey.AskOne(prompt, &selectedMode, opts...)
 
 	cfg.Mode = map[string]string{
 		"Send a file":    "send",
@@ -48,16 +48,16 @@ func handleSurveyMode(cfg *utils.Config) {
 	survey.AskOne(&survey.Input{
 		Message: "Enter your local port to listen on (e.g. 9000):",
 		Default: "9000",
-	}, &cfg.LocalPort)
+	}, &cfg.LocalPort, opts...)
 
 	survey.AskOne(&survey.Input{
 		Message: "Enter peer's address (e.g. 127.0.0.1:9001):",
-	}, &cfg.RemoteAddr)
+	}, &cfg.RemoteAddr, opts...)
 
 	if cfg.Mode == "send" {
 		survey.AskOne(&survey.Input{
 			Message: "Enter path to the file you want to send:",
-		}, &cfg.FilePath)
+		}, &cfg.FilePath, opts...)
 	}
 }
 

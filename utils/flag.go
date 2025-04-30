@@ -16,7 +16,8 @@ type Config struct {
 }
 
 func ParseFlags() (*Config, error) {
-	flags := flag.NewFlagSet("echo", flag.ExitOnError)
+	flags := flag.NewFlagSet("echo", flag.ContinueOnError)
+	flags.SetOutput(os.Stderr)
 
 	cfg := &Config{}
 	flags.StringVar(&cfg.Mode, "mode", "", "Mode: send or receive")
