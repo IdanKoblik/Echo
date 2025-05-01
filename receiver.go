@@ -4,13 +4,13 @@ import (
 	"echo/fileproto"
 	"echo/utils"
 	"fmt"
+	"github.com/fatih/color"
+	"github.com/schollz/progressbar/v3"
+	"google.golang.org/protobuf/proto"
 	"net"
 	"os"
 	"path/filepath"
 	"time"
-	"github.com/fatih/color"
-	"github.com/schollz/progressbar/v3"
-	"google.golang.org/protobuf/proto"
 )
 
 func Receive(conn *net.UDPConn) error {
@@ -19,7 +19,7 @@ func Receive(conn *net.UDPConn) error {
 	var fileName string
 	var totalChunks uint32
 	var receivedSize int64
-	
+
 	success := color.New(color.FgGreen).SprintFunc()
 	info := color.New(color.FgCyan).SprintFunc()
 	warn := color.New(color.FgYellow).SprintFunc()

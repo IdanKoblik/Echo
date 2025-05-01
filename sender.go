@@ -3,14 +3,14 @@ package main
 import (
 	"echo/fileproto"
 	"echo/utils"
+	"fmt"
+	"github.com/fatih/color"
+	"github.com/schollz/progressbar/v3"
+	"google.golang.org/protobuf/proto"
 	"io"
 	"net"
 	"os"
 	"time"
-	"github.com/schollz/progressbar/v3"
-	"google.golang.org/protobuf/proto"
-	"fmt"
-	"github.com/fatih/color"
 )
 
 const VERSION = 1

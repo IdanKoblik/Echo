@@ -4,9 +4,9 @@ import (
 	"echo/utils"
 	"fmt"
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 	"log"
 	"net"
-	"github.com/fatih/color"
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: %v", err)
 	}
-} 
+}
 
 func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 	var selectedMode string
@@ -66,7 +66,6 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 		}, &cfg.FilePath, opts...)
 	}
 }
-
 
 func RunPeer(localAddr, remoteAddr, sendFile string) error {
 	laddr, err := net.ResolveUDPAddr("udp", localAddr)
