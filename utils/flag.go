@@ -9,6 +9,7 @@ import (
 )
 
 type Config struct {
+	HelpMode   bool
 	Mode       string
 	LocalPort  string
 	RemoteAddr string
@@ -20,6 +21,7 @@ func ParseFlags() (*Config, error) {
 	flags.SetOutput(os.Stderr)
 
 	cfg := &Config{}
+	flags.BoolVar(&cfg.HelpMode, "help", false, "Help mode")
 	flags.StringVar(&cfg.Mode, "mode", "", "Mode: send or receive")
 	flags.StringVar(&cfg.LocalPort, "port", "9000", "Local port to listen on")
 	flags.StringVar(&cfg.RemoteAddr, "remote", "", "Peer's address (e.g. 127.0.0.1:9001)")
@@ -54,3 +56,4 @@ func ValidateFlags(cfg *Config) error {
 
 	return nil
 }
+
