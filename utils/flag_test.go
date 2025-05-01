@@ -90,7 +90,7 @@ func TestParseFlags(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			os.Args = tt.args
-
+		
 			cfg, err := ParseFlags()
 
 			if (err != nil) != tt.wantErr {
@@ -129,6 +129,7 @@ func TestValidateFlags(t *testing.T) {
 
 	for _, tt := range tests {
 		cfg := Config{
+			HelpMode:   false,
 			Mode:       tt.mode,
 			LocalPort:  tt.port,
 			RemoteAddr: tt.remote,

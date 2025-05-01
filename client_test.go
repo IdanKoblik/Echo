@@ -39,6 +39,34 @@ func outputHelper(args []string) string {
 	return buf.String()
 }
 
+const test = `
+╔═════════════════════════════════════════════════════════════════════════════════╗
+║ Echo File Transfer                                                              ║
+╠═════════════════════════════════════════════════════════════════════════════════╣
+║ Usage:                                                                          ║
+║   echo [flags]                                                                  ║
+║                                                                                 ║
+║ Flags:                                                                          ║
+║   -mode string                                                                  ║
+║         Mode of operation: send or receive (optional if using interactive mode) ║
+║   -local string                                                                 ║
+║         Local port to listen on (e.g. 9000)                                     ║
+║   -remote string                                                                ║
+║         Remote peer address (e.g. 127.0.0.1:9001)                               ║
+║   -file string                                                                  ║
+║         File path to send (required in send mode)                               ║
+║   -help, -h                                                                     ║
+║         Show this help message and exit                                         ║
+║                                                                                 ║
+║ Interactive mode will start if no flags are provided.                           ║
+╚═════════════════════════════════════════════════════════════════════════════════╝
+`
+
+func TestHelpFlag(t *testing.T) {
+	output := outputHelper([]string{"--help"})
+	assert.Contains(t, output, test)
+}
+
 func TestInvalidMode(t *testing.T) {
 	output := outputHelper([]string{"--mode", "invalidMode"})
 	assert.Contains(t, output, "Invalid input")
