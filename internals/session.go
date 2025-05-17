@@ -12,6 +12,8 @@ import (
 const maxRetries = 3
 
 func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, filename string, chunk []byte, chunkIndex uint32, totalChunks uint32, isLastChunk bool, file *os.File) error {
+	checksum := utils.CalculateChecksum(chunk)
+
 	msg := &fileproto.FileChunk{
 		Version:     uint32(1),
 		Filename:    filename,
@@ -19,17 +21,7 @@ func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, filename string, chunk []
 		TotalChunks: totalChunks,
 		Data:        chunk,
 		IsLastChunk: isLastChunk,
-	}
-
-	if isLastChunk {
-		checksum, err := utils.GetFileChecksum(file)
-		if err != nil {
-			return err
-		}
-		
-		if msg.Checksum != checksum {
-			return fmt.Errorf("checksum mismatch")
-		}
+		Checksum:    checksum,
 	}
 
 	encoded, err := proto.Marshal(msg)
@@ -66,6 +58,11 @@ func ReceivePacket(conn *net.UDPConn, buffer []byte) (*fileproto.FileChunk, *net
 	err = proto.Unmarshal(buffer[:num], &msg)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	checksum := utils.CalculateChecksum(msg.Data)
+	if checksum != msg.Checksum {
+		return nil, nil, fmt.Errorf("checksum mismatch on chunk %d: expected %s, got %s", msg.ChunkIndex, msg.Checksum, checksum)
 	}
 
 	ack := &fileproto.FileAck{

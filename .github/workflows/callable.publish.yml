@@ -1,6 +1,9 @@
 name: Publish
 
 on:
+  push:
+    branches:
+      - "28-hash-check"
   workflow_call:
     inputs:
       VERSION:
@@ -14,20 +17,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.20', '1.23']
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: ${{ matrix.go-version }}
 
       - name: Build binaries for Linux, macOS, and Windows
         run: |
           mkdir -p dist
 
-          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-linux-amd64 .
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-darwin-amd64 .
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-windows-amd64.exe . 
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-linux-amd64 .
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-darwin-amd64 .
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-windows-amd64.exe .
           
       - name: List output files
         run: ls -lh dist
@@ -38,4 +44,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_AUTH }}
         with:
           version: ${{ inputs.VERSION }}
-          assets: '["./dist/*"]'
+          assets: '["./dist/${{ matrix.go-version }}/*"]'
