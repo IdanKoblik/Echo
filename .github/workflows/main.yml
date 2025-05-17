@@ -4,10 +4,10 @@ on:
   pull_request:
     branches:
       - main
-      - 3-cicd
   push:
     branches:
       - main
+      - 28-hash-check
   workflow_dispatch:
     inputs:
       name:
