@@ -16,3 +16,8 @@ func GetFileChecksum(file *os.File) (string, error) {
 	checksum := hex.EncodeToString(hash.Sum(nil))
 	return checksum, nil
 }
+
+func CalculateChecksum(data []byte) string {
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:])
+}

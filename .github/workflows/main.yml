@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - 3-cicd
   push:
     branches:
       - main
@@ -54,6 +53,6 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/callable.publish.yml
     with:
-      VERSION: ${{ github.event.inputs.name || 'dev' }}
+      VERSION: ${{ github.event.inputs.name || 'test' }}
     secrets:
       GH_AUTH: ${{ secrets.GH_AUTH }}

@@ -14,23 +14,53 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: ['1.20', '1.23']
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: ${{ matrix.go-version }}.1
+
+      - name: Update go.mod go version
+        run: |
+          sed -i 's/^go [0-9.]\+/go ${{ matrix.go-version }}/' go.mod
+          go mod tidy
+
+          cat go.mod
 
       - name: Build binaries for Linux, macOS, and Windows
         run: |
-          mkdir -p dist
+          mkdir -p dist/${{ matrix.go-version }}
 
-          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-linux-amd64 .
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-darwin-amd64 .
-          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/echo-windows-amd64.exe . 
-          
+          GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-linux-amd64-${{ matrix.go-version }} .
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-darwin-amd64-${{ matrix.go-version }} .
+          GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-windows-amd64-${{ matrix.go-version }}.exe .
+
       - name: List output files
-        run: ls -lh dist
+        run: ls -lh dist/${{ matrix.go-version }}
+
+      - name: Upload artifacts for next job
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.go-version }}
+          path: dist/${{ matrix.go-version }}
+
+  upload:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: List all files
+        run: ls -R dist
 
       - name: Upload
         uses: IdanKoblik/Changelog@prod
@@ -38,4 +68,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_AUTH }}
         with:
           version: ${{ inputs.VERSION }}
-          assets: '["./dist/*"]'
+          assets: '["./dist/*/*"]'

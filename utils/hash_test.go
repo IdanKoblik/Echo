@@ -6,6 +6,23 @@ import (
 	"testing"
 )
 
+func TestCalculateChecksum(t *testing.T) {
+	testData := []byte("hello world")
+	expectedChecksum := "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
+
+	checksum := CalculateChecksum(testData)
+	if checksum != expectedChecksum {
+		t.Errorf("Checksum mismatch: got %v, want %v", checksum, expectedChecksum)
+	}
+
+	emptyData := []byte("")
+	expectedEmptyChecksum := "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	emptyChecksum := CalculateChecksum(emptyData)
+	if emptyChecksum != expectedEmptyChecksum {
+		t.Errorf("Checksum for empty data mismatch: got %v, want %v", emptyChecksum, expectedEmptyChecksum)
+	}
+}
+
 func TestGetFileChecksum(t *testing.T) {
 	projectRoot := filepath.Join("..")
 	testFilePath := filepath.Join(projectRoot, "fixtures", "test.txt")
