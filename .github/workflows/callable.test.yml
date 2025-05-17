@@ -21,7 +21,7 @@ jobs:
         run: go mod tidy
 
       - name: Run tests
-        run: ./test.sh
+        run: ./scritps/test.sh
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
