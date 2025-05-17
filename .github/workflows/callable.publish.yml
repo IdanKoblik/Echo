@@ -36,19 +36,37 @@ jobs:
 
       - name: Build binaries for Linux, macOS, and Windows
         run: |
-          mkdir -p dist
+          mkdir -p dist/${{ matrix.go-version }}
 
           GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-linux-amd64 .
           GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-darwin-amd64 .
           GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-windows-amd64.exe .
-          
+
       - name: List output files
-        run: ls -lh dist
+        run: ls -lh dist/${{ matrix.go-version }}
+
+      - name: Upload artifacts for next job
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-${{ matrix.go-version }}
+          path: dist/${{ matrix.go-version }}
+
+  upload:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
+
+      - name: List all files
+        run: ls -R dist
 
       - name: Upload
         uses: IdanKoblik/Changelog@prod
         env:
           GITHUB_TOKEN: ${{ secrets.GH_AUTH }}
         with:
-          version: ${{ inputs.VERSION || 'test-go-version' }}
-          assets: '["./dist/${{ matrix.go-version }}/*"]'
+          version: ${{ inputs.VERSION || 'test' }}
+          assets: '["./dist/*/*"]'
