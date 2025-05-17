@@ -29,34 +29,41 @@ Flags:
 Interactive mode will start if no flags are provided.
 `
 
+const VERSION = 1
+
 func main() {
+	if err := mainEntry(); err != nil {
+		log.Fatalf("Error: %v", err)
+	}
+}
+
+func mainEntry() error {
 	cfg, err := utils.ParseFlags()
 	if err != nil {
-		fmt.Printf("Error parsing flags: %v\n", err)
-		return
+		return fmt.Errorf("flag parsing failed: %w", err)
 	}
 
 	if cfg.HelpMode {
 		printHelpBox()
-		return
+		return nil
 	}
 
 	if cfg.Mode == "" {
 		handleSurveyMode(cfg)
 	} else {
-		err = utils.ValidateFlags(cfg)
-		if err != nil {
-			fmt.Printf("Invalid input: %v\n", err)
-			return
+		if err := utils.ValidateFlags(cfg); err != nil {
+			return fmt.Errorf("invalid input: %w", err)
 		}
 	}
 
 	localAddr := fmt.Sprintf(":%s", cfg.LocalPort)
-	err = RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath)
-	if err != nil {
-		log.Fatalf("Error: %v", err)
+	if err := RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath); err != nil {
+		return fmt.Errorf("run failed: %w", err)
 	}
+
+	return nil
 }
+
 
 func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 	var selectedMode string
