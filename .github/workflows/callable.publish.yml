@@ -43,5 +43,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_AUTH }}
         with:
-          version: ${{ inputs.VERSION }}
+          version: ${{ inputs.VERSION || 'test-go-version' }}
           assets: '["./dist/${{ matrix.go-version }}/*"]'
