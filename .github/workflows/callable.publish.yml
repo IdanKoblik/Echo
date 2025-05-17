@@ -46,7 +46,7 @@ jobs:
         run: ls -lh dist/${{ matrix.go-version }}
 
       - name: Upload artifacts for next job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.go-version }}
           path: dist/${{ matrix.go-version }}
@@ -56,7 +56,7 @@ jobs:
     needs: build
     steps:
       - name: Download all build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: dist
 
