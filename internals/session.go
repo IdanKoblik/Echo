@@ -26,7 +26,10 @@ func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, filename string, chunk []
 		if err != nil {
 			return err
 		}
-		msg.Checksum = checksum
+		
+		if msg.Checksum != checksum {
+			return fmt.Errorf("checksum mismatch")
+		}
 	}
 
 	encoded, err := proto.Marshal(msg)
