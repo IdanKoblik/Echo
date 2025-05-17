@@ -27,6 +27,10 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Update go.mod go version
+        run: |
+          sed -i 's/^go [0-9.]\+/go ${{ matrix.go-version }}/' go.mod
+
       - name: Build binaries for Linux, macOS, and Windows
         run: |
           mkdir -p dist
