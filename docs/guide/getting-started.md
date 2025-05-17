@@ -34,13 +34,13 @@ To use Echo non-interactively:
 ### Send a file:
 
 ```bash
-./echo --mode send --local-port 9000 --remote-addr 192.168.1.5:9001 --file mydoc.pdf
+./echo --mode send --port 9000 --remote 192.168.1.5:9001 --file mydoc.pdf
 ```
 
 ### Receive a file:
 
 ```bash
-./echo --mode receive --local-port 9001 --remote-addr 192.168.1.4:9000
+./echo --mode receive --port 9001 --remote 192.168.1.4:9000
 ```
 
 ## 4. Verify Operation
