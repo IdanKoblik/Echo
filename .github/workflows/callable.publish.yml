@@ -30,6 +30,7 @@ jobs:
       - name: Update go.mod go version
         run: |
           sed -i 's/^go [0-9.]\+/go ${{ matrix.go-version }}/' go.mod
+          go mod tidy
 
       - name: Build binaries for Linux, macOS, and Windows
         run: |
