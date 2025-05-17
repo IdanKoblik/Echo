@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - main
-      - 28-hash-check
   workflow_dispatch:
     inputs:
       name:
@@ -51,7 +50,7 @@ jobs:
 
   publish:
     needs: run_secuirty
-    #if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/callable.publish.yml
     with:
       VERSION: ${{ github.event.inputs.name || 'test' }}
