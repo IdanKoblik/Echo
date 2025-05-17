@@ -1,0 +1,51 @@
+.TH ECHO 1 "May 2025" "Echo 1.0.0" "User Commands"
+.SH NAME
+echo \- Peer-to-peer file transfer CLI tool
+.SH SYNOPSIS
+.B echo
+[\fI-mode send|receive\fR]
+[\fI-local PORT\fR]
+[\fI-remote ADDR:PORT\fR]
+[\fI-file FILEPATH\fR]
+[\fI-help\fR]
+.SH DESCRIPTION
+\fBEcho\fR is a lightweight, peer-to-peer (P2P) file transfer system designed for reliability, speed, and simplicity. Whether you're sending files across your local network or over the internet, Echo ensures smooth and secure transfers without relying on central servers.
+
+If no flags are provided, Echo starts in an interactive mode.
+
+.SH OPTIONS
+.TP
+.B \-mode string
+Mode of operation: \fBsend\fR or \fBreceive\fR. Optional if using interactive mode.
+.TP
+.B \-local string
+Local port to listen on (e.g. \fB9000\fR).
+.TP
+.B \-remote string
+Remote peer address (e.g. \fB127.0.0.1:9001\fR).
+.TP
+.B \-file string
+File path to send. Required in \fBsend\fR mode.
+.TP
+.B \-help, \-h
+Show help message and exit.
+
+.SH EXAMPLES
+.TP
+Interactive mode:
+.B echo
+.TP
+Send a file:
+.B echo -mode send -local 9000 -remote 127.0.0.1:9001 -file myfile.txt
+.TP
+Receive a file:
+.B echo -mode receive -local 9001 -remote 127.0.0.1:9000
+
+.SH AUTHOR
+Written by Idan Koblik.
+
+.SH PROJECT HOME
+https://github.com/IdanKoblik/Echo
+
+.SH LICENSE
+MIT License
