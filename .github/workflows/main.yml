@@ -51,7 +51,6 @@ jobs:
 
   publish:
     needs: run_secuirty
-    if: github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/callable.publish.yml
     with:
       VERSION: ${{ github.event.inputs.name || 'test' }}
