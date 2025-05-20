@@ -6,8 +6,8 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 	"log"
-	"strings"
 	"net"
+	"strings"
 )
 
 const HELP = `
@@ -63,7 +63,6 @@ func mainEntry() error {
 
 	return nil
 }
-
 
 func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 	var selectedMode string

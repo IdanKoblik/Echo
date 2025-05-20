@@ -56,4 +56,3 @@ func ValidateFlags(cfg *Config) error {
 
 	return nil
 }
-

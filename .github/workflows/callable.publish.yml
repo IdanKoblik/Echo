@@ -36,7 +36,7 @@ jobs:
           mkdir -p dist/${{ matrix.go-version }}
 
           GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-linux-amd64-${{ matrix.go-version }} .
-          GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-darwin-amd64-${{ matrix.go-version }} .
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-darwin-amd64-${{ matrix.go-version }} .
           GOOS=windows GOARCH=amd64 go build -ldflags "-s -w" -o dist/${{ matrix.go-version }}/echo-windows-amd64-${{ matrix.go-version }}.exe .
 
       - name: List output files

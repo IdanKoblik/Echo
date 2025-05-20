@@ -2,6 +2,7 @@ package internals
 
 import (
 	"echo/fileproto"
+	"fmt"
 	"net"
 	"time"
 
@@ -14,17 +15,20 @@ func HandleAck(connection net.Conn, expectedIndex uint32) (bool, error) {
 	ackBuffer := make([]byte, 128)
 	err := connection.SetReadDeadline(time.Now().Add(timeout))
 	if err != nil {
+		fmt.Println("test1: ", err)
 		return false, err
 	}
 
 	num, err := connection.Read(ackBuffer)
 	if err != nil {
+		fmt.Println("test2: ", err)
 		return false, err
 	}
 
 	var ackMsg fileproto.FileAck
 	err = proto.Unmarshal(ackBuffer[:num], &ackMsg)
 	if err != nil {
+		fmt.Println("test3: ", err)
 		return false, err
 	}
 

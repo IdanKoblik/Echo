@@ -11,16 +11,20 @@ import (
 
 const maxRetries = 3
 
-func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, filename string, chunk []byte, chunkIndex uint32, totalChunks uint32, isLastChunk bool, file *os.File) error {
-	checksum := utils.CalculateChecksum(chunk)
+type Chunk struct {
+	Index int
+	Data  []byte
+}
+
+func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, chunk *Chunk, totalChunks uint32, file *os.File) error {
+	checksum := utils.CalculateChecksum(chunk.Data)
 
 	msg := &fileproto.FileChunk{
 		Version:     uint32(1),
-		Filename:    filename,
-		ChunkIndex:  chunkIndex,
+		Filename:    file.Name(),
+		ChunkIndex:  uint32(chunk.Index),
 		TotalChunks: totalChunks,
-		Data:        chunk,
-		IsLastChunk: isLastChunk,
+		Data:        chunk.Data,
 		Checksum:    checksum,
 	}
 
@@ -29,20 +33,19 @@ func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, filename string, chunk []
 		return err
 	}
 
-	retries := 0
-	_, err = conn.WriteToUDP(encoded, raddr)
-	if err != nil {
-		return err
-	}
-
-	ok, err := HandleAck(conn, chunkIndex)
-	if err != nil || !ok {
-		if retries < maxRetries {
-			retries++
-			return SendPacket(conn, raddr, filename, chunk, chunkIndex, totalChunks, isLastChunk, file)
+	for retries := 0; retries < maxRetries; retries++ {
+		_, err = conn.WriteToUDP(encoded, raddr)
+		if err != nil {
+			return err
 		}
 
-		return fmt.Errorf("failed to receive ACK after %d retries for chunk %d: %v", maxRetries, chunkIndex, err)
+		// Debug output
+		fmt.Printf("Sent chunk %d (attempt %d)\n", chunk.Index, retries+1)
+
+		ok, err := HandleAck(conn, uint32(chunk.Index))
+		if err == nil && ok {
+			return nil
+		}
 	}
 
 	return nil

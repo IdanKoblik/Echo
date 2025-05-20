@@ -9,8 +9,7 @@ message FileChunk {
     uint32 chunkIndex = 3;
     uint32 totalChunks = 4;
     bytes data = 5;
-    bool isLastChunk = 6;
-    string checksum = 7;
+    string checksum = 6;
 }
 
 message FileAck {

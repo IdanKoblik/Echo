@@ -7,7 +7,7 @@ import (
 )
 
 type ProgressBar struct {
-	Len int
+	Len         int
 	Description string
 }
 
@@ -29,4 +29,4 @@ func (progressBar *ProgressBar) Init() *progressbar.ProgressBar {
 
 	bar.RenderBlank()
 	return bar
-} 
+}

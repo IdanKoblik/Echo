@@ -2,13 +2,10 @@ package main
 
 import (
 	"echo/internals"
-	"echo/ui"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
-
-	"github.com/schollz/progressbar/v3"
 )
 
 func Receive(conn *net.UDPConn) error {
@@ -20,9 +17,11 @@ func Receive(conn *net.UDPConn) error {
 		return err
 	}
 
+	chunks := make(map[int][]byte)
 	buffer := make([]byte, 2048)
+	count := 0
+	var expectedChunks int
 
-	var progressBar *progressbar.ProgressBar
 	for {
 		msg, _, err := internals.ReceivePacket(conn, buffer)
 		if err != nil {
@@ -42,23 +41,28 @@ func Receive(conn *net.UDPConn) error {
 			}
 			defer outputFile.Close()
 
-			progress := ui.ProgressBar {
-				Len: int(msg.TotalChunks),
-				Description: "Receiving file",
-			}
-
-			progressBar = progress.Init()
+			expectedChunks = int(msg.TotalChunks)
 		}
 
-		_, err = outputFile.Write(msg.Data)
-		if err != nil {
-			return fmt.Errorf("failed to write to file: %v", err)
+		if _, exists := chunks[int(msg.ChunkIndex)]; !exists {
+			chunks[int(msg.ChunkIndex)] = msg.Data
+			count++
 		}
 
-		progressBar.Add(1)
-		if msg.IsLastChunk {
-			return nil
+		if count == expectedChunks {
+			break
 		}
 	}
 
+	for i := 1; i <= expectedChunks; i++ {
+		data, exists := chunks[i]
+		if !exists {
+			return fmt.Errorf("missing chunk at index %d", i)
+		}
+		if _, err := outputFile.Write(data); err != nil {
+			return fmt.Errorf("failed to write chunk %d: %v", i, err)
+		}
+	}
+
+	return nil
 }
