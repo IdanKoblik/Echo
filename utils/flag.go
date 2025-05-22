@@ -14,6 +14,8 @@ type Config struct {
 	LocalPort  string
 	RemoteAddr string
 	FilePath   string
+	BenchMark  bool
+	Workers    int
 }
 
 func ParseFlags() (*Config, error) {
@@ -26,6 +28,8 @@ func ParseFlags() (*Config, error) {
 	flags.StringVar(&cfg.LocalPort, "port", "9000", "Local port to listen on")
 	flags.StringVar(&cfg.RemoteAddr, "remote", "", "Peer's address (e.g. 127.0.0.1:9001)")
 	flags.StringVar(&cfg.FilePath, "file", "", "Path to file to send (required if mode is send)")
+	flags.BoolVar(&cfg.BenchMark, "bench", false, "Run benchmarking")
+	flags.IntVar(&cfg.Workers, "workers", 1, "Number of workers that run chunk sending")
 
 	if err := flags.Parse(os.Args[1:]); err != nil {
 		return nil, err

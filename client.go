@@ -15,16 +15,19 @@ Usage:
   echo [flags]
 
 Flags:
-  -mode string
+  --mode string
         Mode of operation: send or receive (optional if using interactive mode)
-  -local string
+  --local string
         Local port to listen on (e.g. 9000)
-  -remote string
+  --remote string
         Remote peer address (e.g. 127.0.0.1:9001)
-  -file string
+  --file string
         File path to send (required in send mode)
-  -help, -h
+  --help
         Show this help message and exit
+
+  --bench
+		Run benchmarking
 
 Interactive mode will start if no flags are provided.
 `
@@ -57,7 +60,7 @@ func mainEntry() error {
 	}
 
 	localAddr := fmt.Sprintf(":%s", cfg.LocalPort)
-	if err := RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath); err != nil {
+	if err := RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath, cfg.Workers, cfg.BenchMark); err != nil {
 		return fmt.Errorf("run failed: %w", err)
 	}
 
@@ -98,7 +101,7 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 	}
 }
 
-func RunPeer(localAddr, remoteAddr, sendFile string) error {
+func RunPeer(localAddr, remoteAddr, sendFile string, workers int, benchmark bool) error {
 	laddr, err := net.ResolveUDPAddr("udp", localAddr)
 	if err != nil {
 		return err
@@ -112,9 +115,9 @@ func RunPeer(localAddr, remoteAddr, sendFile string) error {
 	defer conn.Close()
 
 	if sendFile != "" {
-		return Send(sendFile, conn, remoteAddr)
+		return Send(sendFile, conn, remoteAddr, workers, benchmark)
 	} else {
-		return Receive(conn)
+		return Receive(conn, benchmark)
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 func HandleAck(connection net.Conn, expectedIndex uint32) (bool, error) {
-	const timeout = 5 * time.Second // 5 seconds
+	const timeout = 10 * time.Second
 
 	ackBuffer := make([]byte, 128)
 	err := connection.SetReadDeadline(time.Now().Add(timeout))
