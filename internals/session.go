@@ -16,11 +16,11 @@ type Chunk struct {
 	Data  []byte
 }
 
-func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, chunk *Chunk, totalChunks uint32, file *os.File) error {
+func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, chunk *Chunk, totalChunks uint32, file *os.File, version uint32) error {
 	checksum := utils.CalculateChecksum(chunk.Data)
 
 	msg := &fileproto.FileChunk{
-		Version:     uint32(1), // TODO fix
+		Version:     version, // TODO fix
 		Filename:    file.Name(),
 		ChunkIndex:  uint32(chunk.Index),
 		TotalChunks: totalChunks,

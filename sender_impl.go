@@ -92,7 +92,7 @@ func fixedWorker(chunks []internals.Chunk, conn *net.UDPConn, raddr *net.UDPAddr
 
 	for _, chunk := range chunks {
 		start := time.Now()
-		err := internals.SendPacket(conn, raddr, &chunk, total, file)
+		err := internals.SendPacket(conn, raddr, &chunk, total, file, VERSION)
 		if err != nil {
 			fmt.Println("Cannot send packet: ", err)
 			return
