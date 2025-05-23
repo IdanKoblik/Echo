@@ -4,23 +4,25 @@ import (
 	"echo/fileproto"
 	"echo/utils"
 	"fmt"
-	"google.golang.org/protobuf/proto"
 	"net"
 	"os"
+	"time"
+
+	"google.golang.org/protobuf/proto"
 )
 
-const maxRetries = 3
+const maxRetries = 5
 
 type Chunk struct {
 	Index int
 	Data  []byte
 }
 
-func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, chunk *Chunk, totalChunks uint32, file *os.File, version uint32) error {
+func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, chunk *Chunk, totalChunks uint32, file *os.File, version uint32, ackManager *AckManager) error {
 	checksum := utils.CalculateChecksum(chunk.Data)
 
 	msg := &fileproto.FileChunk{
-		Version:     version, // TODO fix
+		Version:     version,
 		Filename:    file.Name(),
 		ChunkIndex:  uint32(chunk.Index),
 		TotalChunks: totalChunks,
@@ -33,21 +35,21 @@ func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, chunk *Chunk, totalChunks
 		return err
 	}
 
+	ch := ackManager.Register(uint32(chunk.Index))
 	for retries := 0; retries < maxRetries; retries++ {
-		_, err = conn.WriteToUDP(encoded, raddr)
+		_, err := conn.WriteToUDP(encoded, raddr)
 		if err != nil {
 			return err
 		}
-
-		// Debug output
-		fmt.Printf("Sent chunk %d (attempt %d)\n", chunk.Index, retries+1)
-
-		ok, err := HandleAck(conn, uint32(chunk.Index))
-		if err == nil && ok {
-			return nil
+	
+		select {
+		case <-ch:
+			return nil 
+		case <-time.After(2 * time.Second):
+			fmt.Printf("Retry chunk %d (attempt %d)\n", chunk.Index, retries+2)
 		}
 	}
-
+	
 	return nil
 }
 

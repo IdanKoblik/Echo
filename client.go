@@ -3,11 +3,12 @@ package main
 import (
 	"echo/utils"
 	"fmt"
-	"github.com/AlecAivazis/survey/v2"
-	"github.com/fatih/color"
-	"log"
 	"net"
 	"strings"
+	"log"
+
+	"github.com/AlecAivazis/survey/v2"
+	"github.com/fatih/color"
 )
 
 const HELP = `
@@ -25,9 +26,8 @@ Flags:
         File path to send (required in send mode)
   --help
         Show this help message and exit
-
   --bench
-		Run benchmarking
+        Run benchmarking
 
 Interactive mode will start if no flags are provided.
 `
@@ -60,7 +60,7 @@ func mainEntry() error {
 	}
 
 	localAddr := fmt.Sprintf(":%s", cfg.LocalPort)
-	if err := RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath, cfg.Workers, cfg.BenchMark); err != nil {
+	if err := RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath, cfg.BenchMark); err != nil {
 		return fmt.Errorf("run failed: %w", err)
 	}
 
@@ -101,7 +101,7 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 	}
 }
 
-func RunPeer(localAddr, remoteAddr, sendFile string, workers int, benchmark bool) error {
+func RunPeer(localAddr, remoteAddr, sendFile string, benchmark bool) error {
 	laddr, err := net.ResolveUDPAddr("udp", localAddr)
 	if err != nil {
 		return err
@@ -115,7 +115,7 @@ func RunPeer(localAddr, remoteAddr, sendFile string, workers int, benchmark bool
 	defer conn.Close()
 
 	if sendFile != "" {
-		return Send(sendFile, conn, remoteAddr, workers, benchmark)
+		return Send(sendFile, conn, remoteAddr, benchmark)
 	} else {
 		return Receive(conn, benchmark)
 	}

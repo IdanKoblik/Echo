@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-func Send(filename string, conn *net.UDPConn, remoteAddr string, workerCount int, benchmark bool) error {
+func Send(filename string, conn *net.UDPConn, remoteAddr string, benchmark bool) error {
 	start := time.Now()
-	
+
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -24,7 +24,7 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string, workerCount int
 		return err
 	}
 
-	const chunkSize = 1024
+	const chunkSize = 1400
 	buffer := make([]byte, chunkSize)
 	var chunks []internals.Chunk
 	index := 0
@@ -51,10 +51,26 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string, workerCount int
 	}
 
 	chunkCount := len(chunks)
-	chunksPerWorker := (chunkCount + workerCount - 1) / workerCount
+	uploadMbps, rttMs, err := MeasureUpload(); if err != nil {
+		return err
+	}
 
+	chunksPerSecond := (uploadMbps * 125000) / float64(chunkSize)
+	acksPerWorker := 1000.0 / rttMs
+	optimalWorkersFloat := chunksPerSecond / acksPerWorker
+	optimalWorkers := int(optimalWorkersFloat)
+	if optimalWorkers < 1 {
+		optimalWorkers = 1
+	}
+	
+	chunksPerWorker := (chunkCount + optimalWorkers - 1) / optimalWorkers
+	ackManager := internals.NewAckManager()
+	go ackManager.Listen(conn)
+
+	
+	fmt.Println("Number of workers: ", optimalWorkers)
 	var wg sync.WaitGroup
-	for w := 0; w < workerCount; w++ {
+	for w := 0; w < optimalWorkers; w++ {
 		start := w * chunksPerWorker
 		end := (w + 1) * chunksPerWorker
 		if end > chunkCount {
@@ -67,7 +83,27 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string, workerCount int
 
 		assignedChunks := chunks[start:end]
 		wg.Add(1)
-		go fixedWorker(assignedChunks, conn, raddr, uint32(chunkCount), file, &wg, stats)
+		go func(workerChunks []internals.Chunk) {
+			defer wg.Done()
+			var totalBytesTransferred int64
+			var totalPacketsSent int
+
+			for _, chunk := range workerChunks {
+				start := time.Now()
+				err := internals.SendPacket(conn, raddr, &chunk, uint32(chunkCount), file, VERSION, ackManager)
+				if err != nil {
+					fmt.Println("Send error:", err)
+					return
+				}
+
+				stats.ChunkTimings = append(stats.ChunkTimings, time.Since(start))
+				totalBytesTransferred += int64(len(chunk.Data))
+				totalPacketsSent++
+			}
+
+			stats.TotalBytes += totalBytesTransferred
+			stats.PacketsSent += totalPacketsSent
+		}(assignedChunks)
 	}
 
 	wg.Wait()
@@ -75,34 +111,9 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string, workerCount int
 	duration := time.Since(start)
 	stats.TotalTime = duration
 	stats.TransferSpeed = float64(stats.TotalBytes) / duration.Seconds()
-
 	stats.MemoryUsage = GetMemoryUsage()
 	stats.CpuUsage = getCpuUsage()
-
 	stats.PrintStats(benchmark)
 
 	return nil
-}
-
-func fixedWorker(chunks []internals.Chunk, conn *net.UDPConn, raddr *net.UDPAddr, total uint32, file *os.File, wg *sync.WaitGroup, stats *BenchmarkStats) {
-	defer wg.Done()
-
-	var totalBytesTransferred int64
-	var totalPacketsSent int
-
-	for _, chunk := range chunks {
-		start := time.Now()
-		err := internals.SendPacket(conn, raddr, &chunk, total, file, VERSION)
-		if err != nil {
-			fmt.Println("Cannot send packet: ", err)
-			return
-		}
-
-		stats.ChunkTimings = append(stats.ChunkTimings, time.Since(start))
-		totalBytesTransferred += int64(len(chunk.Data))
-		totalPacketsSent++
-	}
-
-	stats.TotalBytes += totalBytesTransferred
-	stats.PacketsSent += totalPacketsSent
 }

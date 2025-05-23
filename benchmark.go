@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"time"
 )
 
@@ -16,8 +15,6 @@ type BenchmarkStats struct {
 	ChunkTimings    []time.Duration
 	MemoryUsage     uint64
 	CpuUsage        float64
-
-	mu sync.Mutex
 }
 
 func (b *BenchmarkStats) PrintStats(mode bool) {

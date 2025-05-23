@@ -2,35 +2,49 @@ package internals
 
 import (
 	"echo/fileproto"
-	"fmt"
+	"sync"
 	"net"
-	"time"
 
 	"google.golang.org/protobuf/proto"
 )
+type AckManager struct {
+    mu    sync.Mutex
+    acks  map[uint32]chan struct{}
+}
 
-func HandleAck(connection net.Conn, expectedIndex uint32) (bool, error) {
-	const timeout = 10 * time.Second
+func NewAckManager() *AckManager {
+    return &AckManager{acks: make(map[uint32]chan struct{})}
+}
 
-	ackBuffer := make([]byte, 128)
-	err := connection.SetReadDeadline(time.Now().Add(timeout))
-	if err != nil {
-		fmt.Println("test1: ", err)
-		return false, err
-	}
+func (am *AckManager) Register(index uint32) chan struct{} {
+    am.mu.Lock()
+    defer am.mu.Unlock()
+    ch := make(chan struct{}, 1)
+    am.acks[index] = ch
+    return ch
+}
 
-	num, err := connection.Read(ackBuffer)
-	if err != nil {
-		fmt.Println("test2: ", err)
-		return false, err
-	}
+func (am *AckManager) Notify(index uint32) {
+    am.mu.Lock()
+    defer am.mu.Unlock()
+    if ch, ok := am.acks[index]; ok {
+        ch <- struct{}{}
+        close(ch)
+        delete(am.acks, index)
+    }
+}
 
-	var ackMsg fileproto.FileAck
-	err = proto.Unmarshal(ackBuffer[:num], &ackMsg)
-	if err != nil {
-		fmt.Println("test3: ", err)
-		return false, err
-	}
+func (am *AckManager) Listen(conn *net.UDPConn) {
+    buffer := make([]byte, 128)
+    for {
+        n, _, err := conn.ReadFromUDP(buffer)
+        if err != nil {
+            continue
+        }
 
-	return ackMsg.ChunkIndex == expectedIndex, nil
+        var ack fileproto.FileAck
+        if err := proto.Unmarshal(buffer[:n], &ack); err == nil {
+            am.Notify(ack.ChunkIndex)
+        }
+    }
 }

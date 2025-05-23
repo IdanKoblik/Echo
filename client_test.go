@@ -39,29 +39,6 @@ func outputHelper(args []string) (string, error) {
 	return buf.String(), err
 }
 
-const helpText = `
-╔═════════════════════════════════════════════════════════════════════════════════╗
-║ Echo File Transfer                                                              ║
-╠═════════════════════════════════════════════════════════════════════════════════╣
-║ Usage:                                                                          ║
-║   echo [flags]                                                                  ║
-║                                                                                 ║
-║ Flags:                                                                          ║
-║   -mode string                                                                  ║
-║         Mode of operation: send or receive (optional if using interactive mode) ║
-║   -local string                                                                 ║
-║         Local port to listen on (e.g. 9000)                                     ║
-║   -remote string                                                                ║
-║         Remote peer address (e.g. 127.0.0.1:9001)                               ║
-║   -file string                                                                  ║
-║         File path to send (required in send mode)                               ║
-║   -help, -h                                                                     ║
-║         Show this help message and exit                                         ║
-║                                                                                 ║
-║ Interactive mode will start if no flags are provided.                           ║
-╚═════════════════════════════════════════════════════════════════════════════════╝
-`
-
 func TestHelpFlag(t *testing.T) {
 	err := runWithArgs([]string{"--help"})
 	assert.NoError(t, err)
