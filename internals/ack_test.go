@@ -10,85 +10,66 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-func TestHandleAck(t *testing.T) {
-	serverConn, clientConn := net.Pipe()
-	defer serverConn.Close()
-	defer clientConn.Close()
+func TestAckManager_RegisterAndNotify(t *testing.T) {
+    am := internals.NewAckManager()
+    index := uint32(42)
 
-	expectedIndex := uint32(42)
-	ackMsg := &fileproto.FileAck{
-		ChunkIndex: expectedIndex,
-	}
+    ch := am.Register(index)
+    if ch == nil {
+        t.Fatal("expected channel, got nil")
+    }
 
-	data, err := proto.Marshal(ackMsg)
-	if err != nil {
-		t.Fatalf("failed to marshal protobuf: %v", err)
-	}
+    am.Notify(index)
 
-	go func() {
-		_, err := clientConn.Write(data)
-		if err != nil {
-			t.Errorf("failed to write to clientConn: %v", err)
-		}
-	}()
-
-	ok, err := internals.HandleAck(serverConn, expectedIndex)
-	if err != nil {
-		t.Fatalf("HandleAck returned error: %v", err)
-	}
-
-	if !ok {
-		t.Fatalf("expected ack for chunk %d, but got false", expectedIndex)
-	}
+    select {
+    case _, ok := <-ch:
+        if !ok {
+            // Channel closed, good
+        } else {
+            t.Error("expected channel to be closed after notification")
+        }
+    case <-time.After(time.Second):
+        t.Error("timeout waiting for notification")
+    }
 }
 
-func TestHandleAck_WrongIndex(t *testing.T) {
-	serverConn, clientConn := net.Pipe()
-	defer serverConn.Close()
-	defer clientConn.Close()
+func TestAckManager_Listen(t *testing.T) {
+    am := internals.NewAckManager()
+    index := uint32(7)
+    ch := am.Register(index)
 
-	expectedIndex := uint32(42)
-	wrongIndex := uint32(43)
+    addr := &net.UDPAddr{IP: net.IPv4(127, 0, 0, 1), Port: 0}
+    conn, err := net.ListenUDP("udp", addr)
+    if err != nil {
+        t.Fatalf("failed to start UDP listener: %v", err)
+    }
+    defer conn.Close()
 
-	ackMsg := &fileproto.FileAck{
-		ChunkIndex: wrongIndex,
-	}
-	data, err := proto.Marshal(ackMsg)
-	if err != nil {
-		t.Fatalf("failed to marshal protobuf: %v", err)
-	}
+    go am.Listen(conn)
 
-	go func() {
-		_, err := clientConn.Write(data)
-		if err != nil {
-			t.Errorf("failed to write to clientConn: %v", err)
-		}
-	}()
+    udpAddr := conn.LocalAddr().(*net.UDPAddr)
+    ack := &fileproto.FileAck{
+        ChunkIndex: index,
+    }
 
-	ok, err := internals.HandleAck(serverConn, expectedIndex)
-	if err != nil {
-		t.Fatalf("HandleAck returned error: %v", err)
-	}
-	if ok {
-		t.Fatalf("expected false for wrong chunk index, but got true")
-	}
-}
+    data, err := proto.Marshal(ack)
+    if err != nil {
+        t.Fatalf("failed to marshal proto: %v", err)
+    }
 
-func TestHandleAck_Timeout(t *testing.T) {
-	serverConn, _ := net.Pipe()
-	defer serverConn.Close()
+    _, err = conn.WriteToUDP(data, udpAddr)
+    if err != nil {
+        t.Fatalf("failed to send udp packet: %v", err)
+    }
 
-	expectedIndex := uint32(42)
-
-	start := time.Now()
-	_, err := internals.HandleAck(serverConn, expectedIndex)
-	elapsed := time.Since(start)
-
-	if err == nil {
-		t.Fatal("expected timeout error but got nil")
-	}
-
-	if elapsed < 4*time.Second {
-		t.Fatalf("expected timeout after ~5s, but returned early after %v", elapsed)
-	}
+    select {
+    case _, ok := <-ch:
+        if !ok {
+            // Channel closed, good
+        } else {
+            t.Error("expected channel to be closed after notification")
+        }
+    case <-time.After(2 * time.Second):
+        t.Error("timeout waiting for ack notification")
+    }
 }

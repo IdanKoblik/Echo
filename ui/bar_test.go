@@ -22,6 +22,6 @@ func TestProgressBar_Init(t *testing.T) {
 	err := bar.Add(1)
 	assert.NoError(t, err, "Should be able to add to progress bar")
 
-	err = bar.Finish() 
+	err = bar.Finish()
 	assert.NoError(t, err, "Finish should not error")
 }

@@ -2,13 +2,17 @@ package main
 
 import (
 	"echo/internals"
-	"echo/ui"
+	"fmt"
 	"io"
 	"net"
 	"os"
+	"sync"
+	"time"
 )
 
-func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
+func Send(filename string, conn *net.UDPConn, remoteAddr string, benchmark bool) error {
+	start := time.Now()
+
 	file, err := os.Open(filename)
 	if err != nil {
 		return err
@@ -20,36 +24,96 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string) error {
 		return err
 	}
 
-	const chunkSize = 1024
+	const chunkSize = 1400
 	buffer := make([]byte, chunkSize)
-	var chunks [][]byte
+	var chunks []internals.Chunk
+	index := 0
+
+	stats := &BenchmarkStats{}
 
 	for {
 		num, err := file.Read(buffer)
 		if err == io.EOF {
 			break
 		}
-		chunk := make([]byte, num)
-		copy(chunk, buffer[:num])
-		chunks = append(chunks, chunk)
-	}
-
-	total := uint32(len(chunks))
-	progress := ui.ProgressBar {
-		Len: int(total),
-		Description: "Sending file",
-	}
-
-	bar := progress.Init()
-	for i, chunk := range chunks {
-		isLastChunk := (i == len(chunks)-1)
-		err := internals.SendPacket(conn, raddr, filename, chunk, uint32(i), total, isLastChunk, file)
 		if err != nil {
 			return err
 		}
 
-		bar.Add(1)
+		data := make([]byte, num)
+		copy(data, buffer[:num])
+		index++
+
+		chunks = append(chunks, internals.Chunk{
+			Data:  data,
+			Index: index,
+		})
 	}
+
+	chunkCount := len(chunks)
+	uploadMbps, rttMs, err := MeasureUpload(); if err != nil {
+		return err
+	}
+
+	chunksPerSecond := (uploadMbps * 125000) / float64(chunkSize)
+	acksPerWorker := 1000.0 / rttMs
+	optimalWorkersFloat := chunksPerSecond / acksPerWorker
+	optimalWorkers := int(optimalWorkersFloat)
+	if optimalWorkers < 1 {
+		optimalWorkers = 1
+	}
+	
+	chunksPerWorker := (chunkCount + optimalWorkers - 1) / optimalWorkers
+	ackManager := internals.NewAckManager()
+	go ackManager.Listen(conn)
+
+	
+	fmt.Println("Number of workers: ", optimalWorkers)
+	var wg sync.WaitGroup
+	for w := 0; w < optimalWorkers; w++ {
+		start := w * chunksPerWorker
+		end := (w + 1) * chunksPerWorker
+		if end > chunkCount {
+			end = chunkCount
+		}
+
+		if start >= chunkCount {
+			break
+		}
+
+		assignedChunks := chunks[start:end]
+		wg.Add(1)
+		go func(workerChunks []internals.Chunk) {
+			defer wg.Done()
+			var totalBytesTransferred int64
+			var totalPacketsSent int
+
+			for _, chunk := range workerChunks {
+				start := time.Now()
+				err := internals.SendPacket(conn, raddr, &chunk, uint32(chunkCount), file, VERSION, ackManager)
+				if err != nil {
+					fmt.Println("Send error:", err)
+					return
+				}
+
+				stats.ChunkTimings = append(stats.ChunkTimings, time.Since(start))
+				totalBytesTransferred += int64(len(chunk.Data))
+				totalPacketsSent++
+			}
+
+			stats.TotalBytes += totalBytesTransferred
+			stats.PacketsSent += totalPacketsSent
+		}(assignedChunks)
+	}
+
+	wg.Wait()
+
+	duration := time.Since(start)
+	stats.TotalTime = duration
+	stats.TransferSpeed = float64(stats.TotalBytes) / duration.Seconds()
+	stats.MemoryUsage = GetMemoryUsage()
+	stats.CpuUsage = getCpuUsage()
+	stats.PrintStats(benchmark)
 
 	return nil
 }

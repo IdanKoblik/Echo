@@ -2,16 +2,14 @@ package main
 
 import (
 	"echo/internals"
-	"echo/ui"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
-
-	"github.com/schollz/progressbar/v3"
+	"time"
 )
 
-func Receive(conn *net.UDPConn) error {
+func Receive(conn *net.UDPConn, benchmark bool) error {
 	var outputFile *os.File
 	var fileName string
 
@@ -20,9 +18,15 @@ func Receive(conn *net.UDPConn) error {
 		return err
 	}
 
+	chunks := make(map[int][]byte)
 	buffer := make([]byte, 2048)
+	count := 0
+	var expectedChunks int
 
-	var progressBar *progressbar.ProgressBar
+	stats := &BenchmarkStats{}
+	var start time.Time
+	flag := false
+
 	for {
 		msg, _, err := internals.ReceivePacket(conn, buffer)
 		if err != nil {
@@ -31,6 +35,11 @@ func Receive(conn *net.UDPConn) error {
 
 		if msg.Version != VERSION {
 			return fmt.Errorf("protocol version mismatch :(")
+		}
+
+		if !flag {
+			flag = true
+			start = time.Now()
 		}
 
 		if outputFile == nil {
@@ -42,23 +51,42 @@ func Receive(conn *net.UDPConn) error {
 			}
 			defer outputFile.Close()
 
-			progress := ui.ProgressBar {
-				Len: int(msg.TotalChunks),
-				Description: "Receiving file",
-			}
-
-			progressBar = progress.Init()
+			expectedChunks = int(msg.TotalChunks)
 		}
 
-		_, err = outputFile.Write(msg.Data)
-		if err != nil {
-			return fmt.Errorf("failed to write to file: %v", err)
+		if _, exists := chunks[int(msg.ChunkIndex)]; !exists {
+			chunks[int(msg.ChunkIndex)] = msg.Data
+			stats.ChunkTimings = append(stats.ChunkTimings, time.Since(start))
+			count++
+			stats.PacketsReceived++
 		}
 
-		progressBar.Add(1)
-		if msg.IsLastChunk {
-			return nil
+		if count == expectedChunks {
+			break
 		}
 	}
 
+	flag = false
+	duration := time.Since(start)
+
+	for i := 1; i <= expectedChunks; i++ {
+		data, exists := chunks[i]
+		if !exists {
+			return fmt.Errorf("missing chunk at index %d", i)
+		}
+		if _, err := outputFile.Write(data); err != nil {
+			return fmt.Errorf("failed to write chunk %d: %v", i, err)
+		}
+
+		stats.TotalBytes += int64(len(data))
+	}
+
+	stats.TotalTime = duration
+	stats.PacketLoss = (1 - float64(stats.PacketsReceived)/float64(expectedChunks)) * 100
+	stats.CpuUsage = getCpuUsage()
+	stats.MemoryUsage = GetMemoryUsage()
+
+	stats.PrintStats(benchmark)
+
+	return nil
 }
