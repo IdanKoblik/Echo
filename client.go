@@ -1,38 +1,24 @@
 package main
 
 import (
+	"echo/ui"
 	"echo/utils"
+	"embed"
 	"fmt"
-	"net"
-	"strings"
+	"io"
+	"io/fs"
 	"log"
+	"net"
+	"net/http"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 )
 
-const HELP = `
-Usage:
-  echo [flags]
+const VERSION = 3
 
-Flags:
-  --mode string
-        Mode of operation: send or receive (optional if using interactive mode)
-  --local string
-        Local port to listen on (e.g. 9000)
-  --remote string
-        Remote peer address (e.g. 127.0.0.1:9001)
-  --file string
-        File path to send (required in send mode)
-  --help
-        Show this help message and exit
-  --bench
-        Run benchmarking
-
-Interactive mode will start if no flags are provided.
-`
-
-const VERSION = 1
+//go:embed web/dist/**
+var embeddedFiles embed.FS
 
 func main() {
 	if err := mainEntry(); err != nil {
@@ -47,7 +33,56 @@ func mainEntry() error {
 	}
 
 	if cfg.HelpMode {
-		printHelpBox()
+		ui.PrintHelpBox()
+		return nil
+	}
+
+	if cfg.Web {
+		http.HandleFunc("/ws", WSHandler)
+		fmt.Println("WebSocket server started on :8080")
+
+		entries, err := fs.ReadDir(embeddedFiles, "web/dist")
+		if err != nil {
+			return fmt.Errorf("embed read error: %w", err)
+		}
+
+		for _, e := range entries {
+			fmt.Println("Embedded file:", e.Name())
+		}
+
+		subFS, err := fs.Sub(embeddedFiles, "web/dist")
+		if err != nil {
+			return fmt.Errorf("failed to create sub filesystem: %w", err)
+		}
+
+		staticHandler := http.FileServer(http.FS(subFS))
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			_, err := fs.Stat(subFS, r.URL.Path[1:])
+			if err != nil {
+				index, err := subFS.Open("index.html")
+				if err != nil {
+					http.Error(w, "index.html not found", http.StatusInternalServerError)
+					return
+				}
+				defer index.Close()
+
+				data, err := io.ReadAll(index)
+				if err != nil {
+					http.Error(w, "failed to read index.html", http.StatusInternalServerError)
+					return
+				}
+
+				w.Write(data)
+				return
+			}
+
+			staticHandler.ServeHTTP(w, r)
+		})
+
+		if err := http.ListenAndServe("0.0.0.0:8080", nil); err != nil {
+			return err
+		}
+
 		return nil
 	}
 
@@ -60,7 +95,7 @@ func mainEntry() error {
 	}
 
 	localAddr := fmt.Sprintf(":%s", cfg.LocalPort)
-	if err := RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath, cfg.BenchMark); err != nil {
+	if err := RunPeer(localAddr, cfg.RemoteAddr, cfg.FilePath, cfg.Dest, cfg.BenchMark); err != nil {
 		return fmt.Errorf("run failed: %w", err)
 	}
 
@@ -98,10 +133,14 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 		survey.AskOne(&survey.Input{
 			Message: fmt.Sprintf("%s Enter path to the file you want to send:", blue(">>")),
 		}, &cfg.FilePath, opts...)
+	} else {
+		survey.AskOne(&survey.Input{
+			Message: fmt.Sprintf("%s Enter output file destention:", blue(">>")),
+		}, &cfg.Dest, opts...)
 	}
 }
 
-func RunPeer(localAddr, remoteAddr, sendFile string, benchmark bool) error {
+func RunPeer(localAddr, remoteAddr, sendFile, dest string, benchmark bool) error {
 	laddr, err := net.ResolveUDPAddr("udp", localAddr)
 	if err != nil {
 		return err
@@ -117,30 +156,6 @@ func RunPeer(localAddr, remoteAddr, sendFile string, benchmark bool) error {
 	if sendFile != "" {
 		return Send(sendFile, conn, remoteAddr, benchmark)
 	} else {
-		return Receive(conn, benchmark)
+		return Receive(conn, benchmark, dest)
 	}
-}
-
-func printHelpBox() {
-	boxColor := color.New(color.FgHiBlue, color.Bold)
-	textColor := color.New(color.FgHiWhite)
-
-	lines := strings.Split(HELP, "\n")
-	maxWidth := 0
-	for _, line := range lines {
-		if len(line) > maxWidth {
-			maxWidth = len(line)
-		}
-	}
-
-	banner := color.New(color.FgGreen, color.Bold).Sprint(" Echo File Transfer ")
-
-	boxColor.Println("╔" + strings.Repeat("═", maxWidth+2) + "╗")
-	fmt.Printf("║%s%s║\n", banner, strings.Repeat(" ", maxWidth-len("Echo File Transfer")))
-	boxColor.Println("╠" + strings.Repeat("═", maxWidth+2) + "╣")
-	for _, line := range lines {
-		textColor.Printf("║ %-*s ║\n", maxWidth, line)
-	}
-
-	boxColor.Println("╚" + strings.Repeat("═", maxWidth+2) + "╝")
 }

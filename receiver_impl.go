@@ -9,13 +9,17 @@ import (
 	"time"
 )
 
-func Receive(conn *net.UDPConn, benchmark bool) error {
+func Receive(conn *net.UDPConn, benchmark bool, dest string) error {
 	var outputFile *os.File
 	var fileName string
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return err
+	if dest == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+
+		dest = homeDir
 	}
 
 	chunks := make(map[int][]byte)
@@ -44,7 +48,7 @@ func Receive(conn *net.UDPConn, benchmark bool) error {
 
 		if outputFile == nil {
 			fileName = msg.Filename
-			filePath := filepath.Join(homeDir, filepath.Base(fileName))
+			filePath := filepath.Join(dest, filepath.Base(fileName))
 			outputFile, err = os.Create(filePath)
 			if err != nil {
 				return fmt.Errorf("failed to create file: %v", err)
@@ -83,7 +87,7 @@ func Receive(conn *net.UDPConn, benchmark bool) error {
 
 	stats.TotalTime = duration
 	stats.PacketLoss = (1 - float64(stats.PacketsReceived)/float64(expectedChunks)) * 100
-	stats.CpuUsage = getCpuUsage()
+	stats.CpuUsage = GetCpuUsage()
 	stats.MemoryUsage = GetMemoryUsage()
 
 	stats.PrintStats(benchmark)

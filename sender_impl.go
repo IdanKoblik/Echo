@@ -51,23 +51,26 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string, benchmark bool)
 	}
 
 	chunkCount := len(chunks)
-	uploadMbps, rttMs, err := MeasureUpload(); if err != nil {
-		return err
-	}
-
-	chunksPerSecond := (uploadMbps * 125000) / float64(chunkSize)
+	/*
+		uploadMbps, rttMs, err := MeasureUpload()
+		if err != nil {
+			return err
+		}
+	*/
+	uploadMbps := 3.42
+	rttMs := 14.0
+	chunksPerSecond := (uploadMbps * 125000) / float64(chunkSize) // mb
 	acksPerWorker := 1000.0 / rttMs
 	optimalWorkersFloat := chunksPerSecond / acksPerWorker
 	optimalWorkers := int(optimalWorkersFloat)
 	if optimalWorkers < 1 {
 		optimalWorkers = 1
 	}
-	
+
 	chunksPerWorker := (chunkCount + optimalWorkers - 1) / optimalWorkers
 	ackManager := internals.NewAckManager()
 	go ackManager.Listen(conn)
 
-	
 	fmt.Println("Number of workers: ", optimalWorkers)
 	var wg sync.WaitGroup
 	for w := 0; w < optimalWorkers; w++ {
@@ -112,7 +115,7 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string, benchmark bool)
 	stats.TotalTime = duration
 	stats.TransferSpeed = float64(stats.TotalBytes) / duration.Seconds()
 	stats.MemoryUsage = GetMemoryUsage()
-	stats.CpuUsage = getCpuUsage()
+	stats.CpuUsage = GetCpuUsage()
 	stats.PrintStats(benchmark)
 
 	return nil

@@ -8,6 +8,6 @@ func GetMemoryUsage() uint64 {
 	return m.Sys
 }
 
-func getCpuUsage() float64 {
+func GetCpuUsage() float64 {
 	return float64(runtime.NumCPU()) * 100
 }

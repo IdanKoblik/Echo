@@ -9,12 +9,14 @@ import (
 )
 
 type Config struct {
-	HelpMode   bool
-	Mode       string
-	LocalPort  string
-	RemoteAddr string
-	FilePath   string
-	BenchMark  bool
+	Mode       string `json:"mode"`
+	LocalPort  string `json:"port"`
+	RemoteAddr string `json:"remote"`
+	HelpMode   bool   `json:"help,omitempty"`
+	FilePath   string `json:"file,omitempty"`
+	BenchMark  bool   `json:"bench,omitempty"`
+	Web        bool   `json:"web,omitempty"`
+	Dest       string `json:"dest,omitempty"`
 }
 
 func ParseFlags() (*Config, error) {
@@ -28,6 +30,8 @@ func ParseFlags() (*Config, error) {
 	flags.StringVar(&cfg.RemoteAddr, "remote", "", "Peer's address (e.g. 127.0.0.1:9001)")
 	flags.StringVar(&cfg.FilePath, "file", "", "Path to file to send (required if mode is send)")
 	flags.BoolVar(&cfg.BenchMark, "bench", false, "Run benchmarking")
+	flags.BoolVar(&cfg.Web, "web", false, "Opens echo-ft web ui")
+	flags.StringVar(&cfg.Dest, "dest", "", "Path to file to send (required if mode is send)")
 
 	if err := flags.Parse(os.Args[1:]); err != nil {
 		return nil, err

@@ -41,15 +41,15 @@ func SendPacket(conn *net.UDPConn, raddr *net.UDPAddr, chunk *Chunk, totalChunks
 		if err != nil {
 			return err
 		}
-	
+
 		select {
 		case <-ch:
-			return nil 
+			return nil
 		case <-time.After(2 * time.Second):
 			fmt.Printf("Retry chunk %d (attempt %d)\n", chunk.Index, retries+2)
 		}
 	}
-	
+
 	return nil
 }
 
