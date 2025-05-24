@@ -12,7 +12,6 @@ import (
 	"net/http"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/fatih/color"
 )
 
 const VERSION = 3
@@ -115,27 +114,24 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 		"Receive a file": "receive",
 	}[selectedMode]
 
-	blue := color.New(color.FgBlue).SprintFunc()
-	bold := color.New(color.Bold).SprintFunc()
-
-	fmt.Printf("\n%s Please choose your settings.\n", bold("CONFIGURATION"))
+	fmt.Printf("\n%s Please choose your settings.\n", "CONFIGURATION")
 
 	survey.AskOne(&survey.Input{
-		Message: fmt.Sprintf("%s Enter your local port to listen on (e.g. 9000):", blue(">>")),
+		Message: fmt.Sprintf("%s Enter your local port to listen on (e.g. 9000):", ">>"),
 		Default: "9000",
 	}, &cfg.LocalPort, opts...)
 
 	survey.AskOne(&survey.Input{
-		Message: fmt.Sprintf("%s Enter peer's address (e.g. 127.0.0.1:9001):", blue(">>")),
+		Message: fmt.Sprintf("%s Enter peer's address (e.g. 127.0.0.1:9001):", ">>"),
 	}, &cfg.RemoteAddr, opts...)
 
 	if cfg.Mode == "send" {
 		survey.AskOne(&survey.Input{
-			Message: fmt.Sprintf("%s Enter path to the file you want to send:", blue(">>")),
+			Message: fmt.Sprintf("%s Enter path to the file you want to send:", ">>"),
 		}, &cfg.FilePath, opts...)
 	} else {
 		survey.AskOne(&survey.Input{
-			Message: fmt.Sprintf("%s Enter output file destention:", blue(">>")),
+			Message: fmt.Sprintf("%s Enter output file destention:", ">>"),
 		}, &cfg.Dest, opts...)
 	}
 }
