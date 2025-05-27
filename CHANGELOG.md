@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2025-b4
+- Fixed a bug where you cannot use ctrl c in survery mode
 - Added output file destination location for the receiver
 - Added a --benchmark flag to enable performance benchmarking during file transfers
 
