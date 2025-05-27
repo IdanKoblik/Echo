@@ -15,6 +15,7 @@ type Config struct {
 	RemoteAddr string
 	FilePath   string
 	BenchMark  bool
+	OutputDest string
 }
 
 func ParseFlags() (*Config, error) {
@@ -28,6 +29,7 @@ func ParseFlags() (*Config, error) {
 	flags.StringVar(&cfg.RemoteAddr, "remote", "", "Peer's address (e.g. 127.0.0.1:9001)")
 	flags.StringVar(&cfg.FilePath, "file", "", "Path to file to send (required if mode is send)")
 	flags.BoolVar(&cfg.BenchMark, "bench", false, "Run benchmarking")
+	flags.StringVar(&cfg.OutputDest, "dest", "", "Output file destenetion (Default: home)")
 
 	if err := flags.Parse(os.Args[1:]); err != nil {
 		return nil, err
