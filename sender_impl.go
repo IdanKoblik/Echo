@@ -2,6 +2,7 @@ package main
 
 import (
 	"echo/internals"
+	"echo/utils"
 	"fmt"
 	"io"
 	"net"
@@ -10,16 +11,16 @@ import (
 	"time"
 )
 
-func Send(filename string, conn *net.UDPConn, remoteAddr string, benchmark bool) error {
+func Send(conn *net.UDPConn, cfg *utils.Config) error {
 	start := time.Now()
 
-	file, err := os.Open(filename)
+	file, err := os.Open(cfg.FilePath)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	raddr, err := net.ResolveUDPAddr("udp", remoteAddr)
+	raddr, err := net.ResolveUDPAddr("udp", cfg.RemoteAddr)
 	if err != nil {
 		return err
 	}
@@ -113,7 +114,7 @@ func Send(filename string, conn *net.UDPConn, remoteAddr string, benchmark bool)
 	stats.TransferSpeed = float64(stats.TotalBytes) / duration.Seconds()
 	stats.MemoryUsage = GetMemoryUsage()
 	stats.CpuUsage = getCpuUsage()
-	stats.PrintStats(benchmark)
+	stats.PrintStats(cfg.BenchMark)
 
 	return nil
 }

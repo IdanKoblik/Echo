@@ -2,6 +2,7 @@ package main
 
 import (
 	"echo/internals"
+	"echo/utils"
 	"fmt"
 	"net"
 	"os"
@@ -9,13 +10,17 @@ import (
 	"time"
 )
 
-func Receive(conn *net.UDPConn, benchmark bool) error {
+func Receive(conn *net.UDPConn, cfg *utils.Config) error {
 	var outputFile *os.File
 	var fileName string
 
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return err
+	if cfg.OutputDest == "" {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+
+		cfg.OutputDest = homeDir
 	}
 
 	chunks := make(map[int][]byte)
@@ -44,7 +49,7 @@ func Receive(conn *net.UDPConn, benchmark bool) error {
 
 		if outputFile == nil {
 			fileName = msg.Filename
-			filePath := filepath.Join(homeDir, filepath.Base(fileName))
+			filePath := filepath.Join(cfg.OutputDest, filepath.Base(fileName))
 			outputFile, err = os.Create(filePath)
 			if err != nil {
 				return fmt.Errorf("failed to create file: %v", err)
@@ -86,7 +91,7 @@ func Receive(conn *net.UDPConn, benchmark bool) error {
 	stats.CpuUsage = getCpuUsage()
 	stats.MemoryUsage = GetMemoryUsage()
 
-	stats.PrintStats(benchmark)
+	stats.PrintStats(cfg.BenchMark)
 
 	return nil
 }
