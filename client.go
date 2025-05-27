@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
@@ -72,7 +73,10 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 		Message: "Choose mode:",
 		Options: []string{"Send a file", "Receive a file"},
 	}
-	survey.AskOne(prompt, &selectedMode, opts...)
+	
+	if err := survey.AskOne(prompt, &selectedMode, opts...); err != nil {
+		os.Exit(0)
+	}
 
 	cfg.Mode = map[string]string{
 		"Send a file":    "send",
@@ -84,23 +88,31 @@ func handleSurveyMode(cfg *utils.Config, opts ...survey.AskOpt) {
 
 	fmt.Printf("\n%s Please choose your settings.\n", bold("CONFIGURATION"))
 
-	survey.AskOne(&survey.Input{
+	if err := survey.AskOne(&survey.Input{
 		Message: fmt.Sprintf("%s Enter your local port to listen on (e.g. 9000):", blue(">>")),
 		Default: "9000",
-	}, &cfg.LocalPort, opts...)
+	}, &cfg.LocalPort, opts...); err != nil {
+		os.Exit(0)
+	}
 
-	survey.AskOne(&survey.Input{
+	if err := survey.AskOne(&survey.Input{
 		Message: fmt.Sprintf("%s Enter peer's address (e.g. 127.0.0.1:9001):", blue(">>")),
-	}, &cfg.RemoteAddr, opts...)
+	}, &cfg.RemoteAddr, opts...); err != nil {
+		os.Exit(0)
+	}
 
 	if cfg.Mode == "send" {
-		survey.AskOne(&survey.Input{
+		if err := survey.AskOne(&survey.Input{
 			Message: fmt.Sprintf("%s Enter path to the file you want to send:", blue(">>")),
-		}, &cfg.FilePath, opts...)
+		}, &cfg.FilePath, opts...); err != nil {
+			os.Exit(0)
+		}
 	} else {
-		survey.AskOne(&survey.Input{
+		if err := survey.AskOne(&survey.Input{
 			Message: fmt.Sprintf("%s Enter destenetion path of the output file:", blue(">>")),
-		}, &cfg.OutputDest, opts...)
+		}, &cfg.OutputDest, opts...); err != nil {
+			os.Exit(0)
+		}
 	}
 }
 
